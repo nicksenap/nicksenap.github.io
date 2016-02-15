@@ -6,12 +6,11 @@ permalink: /about/
 
 About Me：
 
-* Now working in Alibaba.
-* The main direction is JavaScript.
-* Also using PHP and Node.
+* Now studying in KTH Royal Institute of Technology.
+* The main direction is Python.
+* Also using Java and C++.
 * Recently in learning React.
-* [Love reading](http://book.douban.com/people/77063977/){:target="_blank"} in my spare time.
-* Every blog post in this site by Tw93 is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/3.0/cn/" target="_blank">CC 3.0 License.</a>
+* Every blog post in this site by Nicksenap is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/3.0/cn/" target="_blank">CC 3.0 License.</a>
 <br>
 
 

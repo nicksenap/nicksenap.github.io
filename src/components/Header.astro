@@ -34,11 +34,20 @@ import HeaderLink from './HeaderLink.astro';
 			if (label) label.textContent = 'Dark';
 		}
 
-		toggle?.addEventListener('click', () => {
+		function toggleTheme() {
 			root.classList.toggle('theme-light');
 			const isLight = root.classList.contains('theme-light');
 			localStorage.setItem('theme', isLight ? 'light' : 'dark');
 			if (label) label.textContent = isLight ? 'Dark' : 'Light';
+		}
+
+		toggle?.addEventListener('click', toggleTheme);
+
+		document.addEventListener('keydown', (e) => {
+			if (e.ctrlKey && e.key === 't') {
+				e.preventDefault();
+				toggleTheme();
+			}
 		});
 	}
 	initTheme();

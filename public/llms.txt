@@ -1,0 +1,27 @@
+# Nick's Computer
+
+> A personal blog about software engineering, technology, and things I find interesting.
+
+## About
+
+Nick is a software engineer currently reshaping e-commerce at Footway and building dev tools as multipliers for coding agents. Previously at Klarna.
+
+## Sections
+
+- [Thoughts](https://nicksenap.github.io/thoughts): Blog posts about technology, programming, and ideas.
+- [Works](https://nicksenap.github.io/works): Projects and tools.
+
+## Blog Posts
+
+- [My CLI got slow, so I fixed it](https://nicksenap.github.io/thoughts/cli-got-slow/): Spawning 400 git subprocesses made my CLI crawl. Deduping, threading, and caching brought it from 10 seconds to 200 milliseconds.
+
+## Projects
+
+- [Grove](https://github.com/nicksenap/grove): A CLI tool for managing git worktrees across multiple repos. One command, one branch, all your repos checked out and ready.
+- [Paparazzi](https://github.com/nicksenap/paparazzi): A Chrome extension and MCP server that lets Claude Code see what's on your screen. Take screenshots, inspect the DOM, run JS, all from Claude Code.
+
+## Links
+
+- GitHub: https://github.com/nicksenap
+- LinkedIn: https://www.linkedin.com/in/nick-zixian-song
+- RSS: https://nicksenap.github.io/rss.xml

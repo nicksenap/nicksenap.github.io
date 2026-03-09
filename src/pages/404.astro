@@ -1,0 +1,86 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`404 — ${SITE_TITLE}`} description="Page not found." />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<fieldset class="screen">
+				<legend>404 — NOT FOUND</legend>
+				<p class="error">The page you requested does not exist.</p>
+				<div class="menu">
+					<a href="/">About</a>
+					<a href="/thoughts">Thoughts</a>
+					<a href="/works">Works</a>
+					<a href="/rss.xml">RSS Feed</a>
+				</div>
+				<p class="prompt">Ready for option number or command</p>
+				<span class="blink"></span>
+			</fieldset>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.screen {
+		border: 2px solid var(--fg);
+		padding: 1.5rem 1rem 2rem;
+		margin-top: 1rem;
+	}
+	.screen legend {
+		text-transform: uppercase;
+		padding: 0 0.5ch;
+		margin: 0 auto;
+	}
+	.error {
+		margin-bottom: 1.5rem;
+	}
+	.menu {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		margin-bottom: 1.5rem;
+	}
+	.menu a {
+		text-decoration: none;
+		color: var(--fg);
+		text-transform: uppercase;
+		transition: color 0.15s;
+	}
+	.menu a::before {
+		content: '> ';
+		opacity: 0;
+		transition: opacity 0.15s;
+	}
+	.menu a:hover {
+		text-decoration: none;
+		color: var(--accent);
+	}
+	.menu a:hover::before {
+		opacity: 1;
+	}
+	.prompt {
+		margin-bottom: 0.25rem;
+	}
+	.blink {
+		display: inline-block;
+		width: 0.6em;
+		height: 1.15em;
+		background: var(--fg);
+		vertical-align: text-bottom;
+		animation: blink 1s step-end infinite;
+	}
+	@keyframes blink {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0; }
+	}
+</style>

@@ -206,7 +206,6 @@ textarea, input {
 
 @media (max-width: 768px) {
 	:root {
-		--font-size: 14px;
 		--grid-padding: 16px;
 	}
 }

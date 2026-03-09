@@ -10,7 +10,7 @@ const terminalLight = JSON.parse(readFileSync('./src/styles/shiki-terminal-light
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://example.com',
+	site: 'https://nicksenap.github.io',
 	integrations: [mdx(), sitemap()],
 	markdown: {
 		shikiConfig: {

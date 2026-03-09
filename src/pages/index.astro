@@ -1,15 +1,8 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
-import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
-
-const posts = (await getCollection('blog')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
-const recentPosts = posts.slice(0, 5);
 ---
 
 <!doctype html>
@@ -20,78 +13,17 @@ const recentPosts = posts.slice(0, 5);
 	<body>
 		<Header />
 		<main>
-			<section class="intro">
+			<div class="prose">
 				<p>
-					This is a personal blog about software engineering,
-					technology, and things I find interesting.
+					Hello. I'm Nick, a software engineer interested in building
+					things for the web. This is where I write about
+					technology, programming, and ideas.
 				</p>
-			</section>
-
-			<section class="recent">
-				<div class="section-label">RECENT POSTS</div>
-				<ul>
-					{recentPosts.map((post) => (
-						<li>
-							<span class="date">
-								<FormattedDate date={post.data.pubDate} />
-							</span>
-							<a href={`/blog/${post.id}/`}>{post.data.title}</a>
-						</li>
-					))}
-				</ul>
-				<a href="/blog" class="view-all">&rarr; View all posts</a>
-			</section>
+				<p>
+					Feel free to reach out via email or find me on GitHub.
+				</p>
+			</div>
 		</main>
 		<Footer />
 	</body>
 </html>
-
-<style>
-	.intro {
-		margin-bottom: 2rem;
-	}
-	.section-label {
-		margin-bottom: 0.75rem;
-		padding-bottom: 0.5rem;
-		box-shadow: var(--border) 0 -1px 0 0 inset;
-	}
-	ul {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-	}
-	li {
-		display: flex;
-		align-items: baseline;
-		gap: 2ch;
-		padding: 0.5rem 0;
-		box-shadow: var(--border) 0 -1px 0 0 inset;
-	}
-	li:last-child {
-		box-shadow: none;
-	}
-	.date {
-		opacity: 0.5;
-		white-space: nowrap;
-		min-width: 10ch;
-	}
-	li a {
-		color: var(--fg);
-		text-decoration: none;
-	}
-	li a:hover {
-		text-decoration: underline;
-		text-decoration-color: var(--fg);
-	}
-	.view-all {
-		display: inline-block;
-		margin-top: 1rem;
-		color: var(--fg);
-		text-decoration: none;
-		opacity: 0.5;
-		transition: opacity 0.15s;
-	}
-	.view-all:hover {
-		opacity: 1;
-	}
-</style>

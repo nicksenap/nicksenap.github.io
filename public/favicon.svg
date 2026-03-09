@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" fill="#000"/>
-  <text x="5" y="23" font-family="monospace" font-size="20" fill="#e0e0e0">&gt;_</text>
+  <rect width="32" height="32" rx="4" fill="#000"/>
+  <text x="16" y="22" font-family="monospace" font-weight="bold" font-size="18" fill="#ef6300" text-anchor="middle">N</text>
+  <rect x="4" y="26" width="24" height="2" fill="#ef6300" opacity="0.6"/>
 </svg>

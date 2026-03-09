@@ -6,23 +6,21 @@ import HeaderLink from './HeaderLink.astro';
 <header>
 	<nav>
 		<a href="/" class="site-title">{SITE_TITLE}</a>
-		<div class="nav-links">
-			<HeaderLink href="/">Index</HeaderLink>
-			<span class="sep">/</span>
-			<HeaderLink href="/blog">Blog</HeaderLink>
-			<span class="sep">/</span>
-			<HeaderLink href="/about">About</HeaderLink>
+		<div class="nav-right">
+			<div class="nav-links">
+				<HeaderLink href="/">About</HeaderLink>
+				<span class="sep">/</span>
+				<HeaderLink href="/thoughts">Thoughts</HeaderLink>
+				<span class="sep">/</span>
+				<HeaderLink href="/works">Works</HeaderLink>
+			</div>
+			<button class="action-btn" id="theme-toggle" tabindex="0" role="button">
+				<span class="hotkey">&#x2303;+T</span>
+				<span class="label" id="theme-label">Light</span>
+			</button>
 		</div>
 	</nav>
 </header>
-
-<!-- Fixed action bar (SRCL-style) -->
-<div class="action-bar" id="action-bar">
-	<button class="action-btn" id="theme-toggle" tabindex="0" role="button">
-		<span class="hotkey">&#x2303;+T</span>
-		<span class="label" id="theme-label">Light</span>
-	</button>
-</div>
 
 <script>
 	function initTheme() {
@@ -67,6 +65,11 @@ import HeaderLink from './HeaderLink.astro';
 	.site-title:hover {
 		text-decoration: none;
 	}
+	.nav-right {
+		display: flex;
+		align-items: center;
+		gap: 1.5ch;
+	}
 	.nav-links {
 		display: flex;
 		align-items: center;
@@ -75,16 +78,6 @@ import HeaderLink from './HeaderLink.astro';
 	.sep {
 		color: var(--border);
 		user-select: none;
-	}
-
-	/* SRCL-style fixed action bar */
-	.action-bar {
-		position: fixed;
-		bottom: 24px;
-		left: var(--grid-padding);
-		z-index: 100;
-		display: flex;
-		gap: 2px;
 	}
 	.action-btn {
 		display: flex;
@@ -100,11 +93,11 @@ import HeaderLink from './HeaderLink.astro';
 		padding: 0;
 	}
 	.hotkey {
-		padding: 6px 8px;
+		padding: 4px 6px;
 		background: var(--action-hotkey-bg);
 	}
 	.label {
-		padding: 6px 10px;
+		padding: 4px 8px;
 		background: var(--action-content-bg);
 		text-transform: uppercase;
 	}
@@ -112,9 +105,15 @@ import HeaderLink from './HeaderLink.astro';
 		background: var(--accent);
 		color: var(--bg);
 	}
-	@media (max-width: 768px) {
-		.action-bar {
-			bottom: 16px;
+	@media (max-width: 520px) {
+		nav {
+			flex-wrap: wrap;
+			height: auto;
+			padding: 0.6rem 0;
+			gap: 0.4rem;
+		}
+		.site-title {
+			width: 100%;
 		}
 		.hotkey {
 			display: none;

@@ -1,0 +1,76 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import Header from '../../components/Header.astro';
+import { SITE_TITLE } from '../../consts';
+
+const posts = (await getCollection('blog')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`Thoughts — ${SITE_TITLE}`} description="Blog posts and thoughts" />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<ul>
+				{posts.map((post) => (
+					<li>
+						<a href={`/thoughts/${post.id}/`}>
+							<span class="title">{post.data.title}</span>
+							<span class="dots"></span>
+							<span class="date">
+								<FormattedDate date={post.data.pubDate} />
+							</span>
+						</a>
+					</li>
+				))}
+			</ul>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	li {
+		margin: 0;
+	}
+	li a {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5ch;
+		padding: 0.35rem 0;
+		color: var(--fg);
+		text-decoration: none;
+		opacity: 0.5;
+		transition: opacity 0.15s;
+	}
+	li a:hover {
+		opacity: 1;
+	}
+	.title {
+		white-space: nowrap;
+	}
+	.dots {
+		flex: 1;
+		border-bottom: 1px dotted var(--border);
+		min-width: 2ch;
+		position: relative;
+		top: -0.25em;
+	}
+	.date {
+		white-space: nowrap;
+		font-variant-numeric: tabular-nums;
+	}
+</style>

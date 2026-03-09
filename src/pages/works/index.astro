@@ -1,0 +1,55 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import { SITE_TITLE } from '../../consts';
+
+const works = await getCollection('works');
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`Works — ${SITE_TITLE}`} description="Projects and things I've built" />
+	</head>
+	<body>
+		<Header />
+		<main>
+			{works.map((work) => (
+				<article class="work">
+					<h2>
+						{work.data.url ? (
+							<a href={work.data.url} target="_blank" rel="noopener">{work.data.title}</a>
+						) : (
+							work.data.title
+						)}
+					</h2>
+					{work.data.description && <p class="description">{work.data.description}</p>}
+				</article>
+			))}
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.work {
+		margin-bottom: 2.5rem;
+	}
+	.work h2 {
+		margin-bottom: 0.5rem;
+	}
+	.work h2 a {
+		color: var(--fg);
+		text-decoration: none;
+	}
+	.work h2 a:hover {
+		text-decoration: underline;
+		text-decoration-color: var(--fg);
+	}
+	.description {
+		opacity: 0.5;
+		margin: 0;
+	}
+</style>

@@ -128,13 +128,25 @@ pre > code {
 	all: unset;
 }
 
-/* Shiki dual-theme overrides */
-html.theme-light .astro-code {
-	color: var(--shiki-light) !important;
-	background-color: var(--code-bg) !important;
+/* Shiki dual-theme overrides
+   Shiki outputs light colors as inline styles by default.
+   In dark mode (our default), swap to --shiki-dark vars.
+   In light mode, the inline styles are already correct. */
+.astro-code,
+.astro-code span {
+	color: var(--shiki-dark) !important;
+	background-color: transparent !important;
 }
+html.theme-light .astro-code,
 html.theme-light .astro-code span {
 	color: var(--shiki-light) !important;
+	background-color: transparent !important;
+}
+.astro-code {
+	background-color: var(--code-bg) !important;
+}
+html.theme-light .astro-code {
+	background-color: var(--code-bg) !important;
 }
 
 blockquote {

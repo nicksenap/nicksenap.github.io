@@ -1,0 +1,110 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../../components/BaseHead.astro';
+import Footer from '../../../components/Footer.astro';
+import FormattedDate from '../../../components/FormattedDate.astro';
+import Header from '../../../components/Header.astro';
+import { SITE_TITLE } from '../../../consts';
+
+export async function getStaticPaths() {
+	const posts = await getCollection('blog');
+	const tags = new Set(posts.flatMap((post) => post.data.tags ?? []));
+	return [...tags].map((tag) => ({
+		params: { tag },
+		props: {
+			tag,
+			posts: posts
+				.filter((post) => post.data.tags?.includes(tag))
+				.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()),
+		},
+	}));
+}
+
+const { tag, posts } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`#${tag} — ${SITE_TITLE}`} description={`Posts tagged ${tag}`} />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>#{tag}</h1>
+			<ul>
+				{posts.map((post) => (
+					<li>
+						<a href={`/thoughts/${post.id}/`}>
+							<span class="title">{post.data.title}</span>
+							<span class="dots"></span>
+							<span class="date">
+								<FormattedDate date={post.data.pubDate} />
+							</span>
+						</a>
+					</li>
+				))}
+			</ul>
+			<nav class="back">
+				<a href="/thoughts">&larr; All thoughts</a>
+			</nav>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	h1 {
+		margin-bottom: 1.5rem;
+		opacity: 0.5;
+	}
+	ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	li {
+		margin: 0;
+	}
+	li a {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5ch;
+		padding: 0.35rem 0;
+		color: var(--fg);
+		text-decoration: none;
+		opacity: 0.5;
+		transition: opacity 0.15s;
+	}
+	li a:hover {
+		opacity: 1;
+	}
+	.title {
+		white-space: nowrap;
+	}
+	.dots {
+		flex: 1;
+		border-bottom: 1px dotted var(--border);
+		min-width: 2ch;
+		position: relative;
+		top: -0.25em;
+	}
+	.date {
+		white-space: nowrap;
+		font-variant-numeric: tabular-nums;
+	}
+	.back {
+		margin-top: 2rem;
+		padding-top: 1rem;
+		box-shadow: var(--border) 0 2px 0 0 inset;
+	}
+	.back a {
+		color: var(--fg);
+		text-decoration: none;
+		opacity: 0.5;
+		transition: opacity 0.15s;
+	}
+	.back a:hover {
+		opacity: 1;
+	}
+</style>

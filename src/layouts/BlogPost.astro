@@ -7,7 +7,7 @@ import Header from '../components/Header.astro';
 
 type Props = CollectionEntry<'blog'>['data'];
 
-const { title, description, pubDate, updatedDate } = Astro.props;
+const { title, description, pubDate, updatedDate, tags } = Astro.props;
 ---
 
 <html lang="en">
@@ -30,6 +30,13 @@ const { title, description, pubDate, updatedDate } = Astro.props;
 					</div>
 					<h1>{title}</h1>
 					{description && <p class="description">{description}</p>}
+				{tags && tags.length > 0 && (
+					<div class="tags">
+						{tags.map((tag: string) => (
+							<a href={`/thoughts/tags/${tag}/`} class="tag">{tag}</a>
+						))}
+					</div>
+				)}
 				</header>
 				<div class="prose">
 					<slot />
@@ -59,6 +66,22 @@ const { title, description, pubDate, updatedDate } = Astro.props;
 	.description {
 		opacity: 0.5;
 		margin: 0;
+	}
+	.tags {
+		display: flex;
+		gap: 0.5ch;
+		margin-top: 0.75rem;
+	}
+	.tag {
+		opacity: 0.5;
+		text-decoration: none;
+		transition: opacity 0.15s;
+	}
+	.tag::before {
+		content: '#';
+	}
+	.tag:hover {
+		opacity: 1;
 	}
 	.prose :global(h2) {
 		margin-top: 2.5rem;

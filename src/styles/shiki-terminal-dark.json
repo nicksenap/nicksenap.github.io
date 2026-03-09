@@ -1,0 +1,57 @@
+{
+  "name": "terminal-dark",
+  "type": "dark",
+  "colors": {
+    "editor.background": "#000000",
+    "editor.foreground": "#ffffff"
+  },
+  "tokenColors": [
+    {
+      "scope": ["comment", "punctuation.definition.comment"],
+      "settings": {
+        "foreground": "#ffffff80"
+      }
+    },
+    {
+      "scope": ["string", "string.quoted", "string.template"],
+      "settings": {
+        "foreground": "#ef6300"
+      }
+    },
+    {
+      "scope": ["constant.numeric", "constant.language", "constant.character"],
+      "settings": {
+        "foreground": "#ef6300"
+      }
+    },
+    {
+      "scope": ["keyword", "storage.type", "storage.modifier", "keyword.operator"],
+      "settings": {
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "scope": [
+        "entity.name.function",
+        "support.function",
+        "meta.function-call",
+        "entity.name.type",
+        "entity.name.class",
+        "support.type",
+        "support.class",
+        "variable",
+        "variable.other",
+        "variable.parameter",
+        "entity.name.tag",
+        "entity.other.attribute-name",
+        "meta.tag",
+        "punctuation",
+        "meta.brace",
+        "punctuation.definition.tag"
+      ],
+      "settings": {
+        "foreground": "#ffffff"
+      }
+    }
+  ]
+}

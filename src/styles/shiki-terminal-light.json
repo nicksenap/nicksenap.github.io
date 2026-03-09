@@ -1,0 +1,57 @@
+{
+  "name": "terminal-light",
+  "type": "light",
+  "colors": {
+    "editor.background": "#ffffff",
+    "editor.foreground": "#000000"
+  },
+  "tokenColors": [
+    {
+      "scope": ["comment", "punctuation.definition.comment"],
+      "settings": {
+        "foreground": "#00000080"
+      }
+    },
+    {
+      "scope": ["string", "string.quoted", "string.template"],
+      "settings": {
+        "foreground": "#2e8b1a"
+      }
+    },
+    {
+      "scope": ["constant.numeric", "constant.language", "constant.character"],
+      "settings": {
+        "foreground": "#2e8b1a"
+      }
+    },
+    {
+      "scope": ["keyword", "storage.type", "storage.modifier", "keyword.operator"],
+      "settings": {
+        "foreground": "#000000"
+      }
+    },
+    {
+      "scope": [
+        "entity.name.function",
+        "support.function",
+        "meta.function-call",
+        "entity.name.type",
+        "entity.name.class",
+        "support.type",
+        "support.class",
+        "variable",
+        "variable.other",
+        "variable.parameter",
+        "entity.name.tag",
+        "entity.other.attribute-name",
+        "meta.tag",
+        "punctuation",
+        "meta.brace",
+        "punctuation.definition.tag"
+      ],
+      "settings": {
+        "foreground": "#000000"
+      }
+    }
+  ]
+}

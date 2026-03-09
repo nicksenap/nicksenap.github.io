@@ -19,7 +19,7 @@ const posts = (await getCollection('blog')).sort(
 	<body>
 		<Header />
 		<main>
-			<div class="section-header">BLOG</div>
+			<div class="section-label">BLOG</div>
 			<ul>
 				{posts.map((post) => (
 					<li>
@@ -41,13 +41,10 @@ const posts = (await getCollection('blog')).sort(
 </html>
 
 <style>
-	.section-header {
-		font-size: 0.75rem;
-		color: var(--fg-muted);
-		letter-spacing: 0.08em;
+	.section-label {
 		margin-bottom: 0.75rem;
 		padding-bottom: 0.5rem;
-		border-bottom: 1px solid var(--border);
+		box-shadow: var(--border) 0 -1px 0 0 inset;
 	}
 	ul {
 		list-style: none;
@@ -57,18 +54,17 @@ const posts = (await getCollection('blog')).sort(
 	li {
 		display: flex;
 		align-items: baseline;
-		gap: 1.5rem;
+		gap: 2ch;
 		padding: 0.65rem 0;
-		border-bottom: 1px solid var(--border);
+		box-shadow: var(--border) 0 -1px 0 0 inset;
 	}
 	li:last-child {
-		border-bottom: none;
+		box-shadow: none;
 	}
 	.date {
-		font-size: 0.75rem;
-		color: var(--fg-dim);
+		opacity: 0.5;
 		white-space: nowrap;
-		min-width: 8ch;
+		min-width: 10ch;
 		flex-shrink: 0;
 	}
 	.post-info {
@@ -79,16 +75,14 @@ const posts = (await getCollection('blog')).sort(
 	.post-info a {
 		color: var(--fg);
 		text-decoration: none;
-		transition: color 0.15s;
 	}
 	.post-info a:hover {
-		color: var(--accent);
+		text-decoration: underline;
+		text-decoration-color: var(--fg);
 	}
 	.description {
-		font-size: 0.8rem;
-		color: var(--fg-muted);
+		opacity: 0.5;
 		margin: 0;
-		max-width: 55ch;
 	}
 	@media (max-width: 720px) {
 		li {

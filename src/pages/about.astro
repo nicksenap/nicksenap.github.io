@@ -13,7 +13,7 @@ import { SITE_TITLE } from '../consts';
 	<body>
 		<Header />
 		<main>
-			<div class="section-header">ABOUT</div>
+			<div class="section-label">ABOUT</div>
 			<div class="prose">
 				<p>
 					Hello. I'm a software engineer interested in building
@@ -30,15 +30,9 @@ import { SITE_TITLE } from '../consts';
 </html>
 
 <style>
-	.section-header {
-		font-size: 0.75rem;
-		color: var(--fg-muted);
-		letter-spacing: 0.08em;
+	.section-label {
 		margin-bottom: 0.75rem;
 		padding-bottom: 0.5rem;
-		border-bottom: 1px solid var(--border);
-	}
-	.prose {
-		max-width: 55ch;
+		box-shadow: var(--border) 0 -1px 0 0 inset;
 	}
 </style>

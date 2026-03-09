@@ -1,39 +1,35 @@
 /* Terminal aesthetic inspired by sacred.computer (SRCL) */
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;700&display=swap');
 
 :root {
-	--font-mono: 'IBM Plex Mono', 'GeistMono-Regular', Consolas, monaco, monospace;
+	--font-mono: 'Geist Mono', Consolas, monaco, monospace;
 	--bg: #000000;
-	--bg-card: #0a0a0a;
 	--fg: #ffffff;
-	--fg-muted: #6f6f6f;
-	--fg-dim: #393939;
-	--accent: #ef6300;
 	--border: #262626;
-	--link: #ffffff;
-	--link-hover: #ef6300;
+	--accent: #ef6300;
+	--code-bg: rgba(82, 82, 82, 0.3);
+	--action-hotkey-bg: #262626;
+	--action-content-bg: #393939;
 	--selection-bg: #ef6300;
 	--selection-fg: #000000;
 	--content-width: 768px;
-	--line-height: 1.5;
-	--font-size: 14px;
+	--font-size: 16px;
+	--line-height: 1.25;
 	--grid-padding: 20px;
 }
 
 /* Light theme */
 :root.theme-light {
-	--bg: #f5f5f0;
-	--bg-card: #eaeae5;
+	--bg: #ffffff;
 	--fg: #000000;
-	--fg-muted: #6f6f6f;
-	--fg-dim: #c0c0b8;
-	--accent: #ef6300;
-	--border: #d0d0c8;
-	--link: #000000;
-	--link-hover: #ef6300;
-	--selection-bg: #ef6300;
-	--selection-fg: #ffffff;
+	--border: #c6c6c6;
+	--accent: #5cff3b;
+	--code-bg: #f4f4f4;
+	--action-hotkey-bg: #c6c6c6;
+	--action-content-bg: #e0e0e0;
+	--selection-bg: #5cff3b;
+	--selection-fg: #000000;
 }
 
 *,
@@ -61,7 +57,6 @@ body {
 	padding: 0;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-	/* Left-pinned layout: content hugs left, empty space on right */
 	max-width: var(--content-width);
 }
 
@@ -75,15 +70,14 @@ h1, h2, h3, h4, h5, h6 {
 	font-weight: 400;
 	color: var(--fg);
 	margin: 0 0 1rem 0;
-	line-height: 1.35;
+	line-height: var(--line-height);
 	text-transform: uppercase;
-	letter-spacing: 0.01em;
 }
 
 h1 { font-size: 1rem; }
 h2 { font-size: 1rem; }
-h3 { font-size: 0.95rem; }
-h4 { font-size: 0.9rem; }
+h3 { font-size: 1rem; }
+h4 { font-size: 1rem; }
 
 p {
 	margin: 0 0 1rem 0;
@@ -94,16 +88,15 @@ p {
 }
 
 a {
-	color: var(--link);
+	color: var(--fg);
 	text-decoration: underline;
 	text-underline-offset: 3px;
-	text-decoration-color: var(--fg-dim);
-	transition: color 0.15s, text-decoration-color 0.15s;
+	text-decoration-color: var(--border);
+	transition: text-decoration-color 0.15s;
 }
 
 a:hover {
-	color: var(--link-hover);
-	text-decoration-color: var(--link-hover);
+	text-decoration-color: var(--fg);
 }
 
 strong, b {
@@ -112,37 +105,48 @@ strong, b {
 
 code {
 	font-family: var(--font-mono);
-	font-size: 0.9em;
-	padding: 0.15em 0.4em;
-	background: var(--bg-card);
-	border: 1px solid var(--border);
+	font-size: 1em;
+	padding: 0.1em 0.3em;
+	background: var(--code-bg);
 }
 
 pre {
 	font-family: var(--font-mono);
-	font-size: 0.85rem;
-	padding: 1.25rem;
-	background: var(--bg-card);
-	border: 1px solid var(--border);
+	font-size: 1rem;
+	padding: var(--grid-padding);
+	background: var(--code-bg) !important;
 	overflow-x: auto;
-	line-height: 1.6;
+	line-height: var(--line-height);
+	box-shadow:
+		var(--fg) 2px 0 0 0 inset,
+		var(--fg) -2px 0 0 0 inset,
+		var(--fg) 0 -2px 0 0 inset,
+		var(--fg) 0 2px 0 0 inset;
 }
 
 pre > code {
 	all: unset;
 }
 
+/* Shiki dual-theme overrides */
+html.theme-light .astro-code {
+	color: var(--shiki-light) !important;
+	background-color: var(--code-bg) !important;
+}
+html.theme-light .astro-code span {
+	color: var(--shiki-light) !important;
+}
+
 blockquote {
-	border-left: 2px solid var(--accent);
+	box-shadow: var(--fg) 2px 0 0 0 inset;
 	padding: 0 0 0 1rem;
 	margin: 0 0 1rem 0;
-	color: var(--fg-muted);
-	font-style: italic;
 }
 
 hr {
 	border: none;
-	border-top: 1px solid var(--border);
+	height: 2px;
+	background: var(--border);
 	margin: 2rem 0;
 }
 
@@ -162,11 +166,11 @@ img {
 table {
 	width: 100%;
 	border-collapse: collapse;
-	font-size: 0.9rem;
+	font-size: 1rem;
 }
 
 th, td {
-	border: 1px solid var(--border);
+	box-shadow: var(--fg) 0 0 0 1px inset;
 	padding: 0.5rem;
 	text-align: left;
 }
@@ -174,8 +178,6 @@ th, td {
 th {
 	text-transform: uppercase;
 	font-weight: 500;
-	font-size: 0.8rem;
-	letter-spacing: 0.05em;
 }
 
 textarea, input {
@@ -198,7 +200,7 @@ textarea, input {
 
 @media (max-width: 768px) {
 	:root {
-		--font-size: 13px;
+		--font-size: 14px;
 		--grid-padding: 16px;
 	}
 }

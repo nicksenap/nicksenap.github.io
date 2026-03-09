@@ -23,7 +23,7 @@ const { title, description, pubDate, updatedDate } = Astro.props;
 					<div class="meta">
 						<FormattedDate date={pubDate} />
 						{updatedDate && (
-							<span class="updated">
+							<span>
 								&middot; updated <FormattedDate date={updatedDate} />
 							</span>
 						)}
@@ -47,51 +47,47 @@ const { title, description, pubDate, updatedDate } = Astro.props;
 	.post-header {
 		margin-bottom: 2rem;
 		padding-bottom: 1rem;
-		border-bottom: 1px solid var(--border);
+		box-shadow: var(--border) 0 -1px 0 0 inset;
 	}
 	.meta {
-		font-size: 0.75rem;
-		color: var(--fg-dim);
+		opacity: 0.5;
 		margin-bottom: 0.75rem;
 	}
-	.updated {
-		color: var(--fg-dim);
-	}
 	h1 {
-		font-size: 1rem;
 		margin-bottom: 0.5rem;
 	}
 	.description {
-		color: var(--fg-muted);
+		opacity: 0.5;
 		margin: 0;
-	}
-	.prose {
-		color: var(--fg);
 	}
 	.prose :global(h2) {
 		margin-top: 2.5rem;
-		padding-top: 1.5rem;
-		border-top: 1px solid var(--border);
+		padding-top: 1rem;
+		box-shadow: var(--border) 0 2px 0 0 inset;
 	}
 	.prose :global(h3) {
 		margin-top: 2rem;
 	}
 	.prose :global(img) {
-		border: 1px solid var(--border);
+		box-shadow:
+			var(--fg) 2px 0 0 0 inset,
+			var(--fg) -2px 0 0 0 inset,
+			var(--fg) 0 -2px 0 0 inset,
+			var(--fg) 0 2px 0 0 inset;
 		margin: 1.5rem 0;
 	}
 	.post-nav {
 		margin-top: 3rem;
 		padding-top: 1rem;
-		border-top: 1px solid var(--border);
+		box-shadow: var(--border) 0 2px 0 0 inset;
 	}
 	.post-nav a {
-		font-size: 0.8rem;
-		color: var(--fg-muted);
+		color: var(--fg);
 		text-decoration: none;
-		transition: color 0.15s;
+		opacity: 0.5;
+		transition: opacity 0.15s;
 	}
 	.post-nav a:hover {
-		color: var(--accent);
+		opacity: 1;
 	}
 </style>

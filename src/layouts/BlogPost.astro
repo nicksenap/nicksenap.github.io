@@ -45,6 +45,25 @@ const { title, description, pubDate, updatedDate, tags } = Astro.props;
 			<nav class="post-nav">
 				<a href="/thoughts">&larr; Back to thoughts</a>
 			</nav>
+			<section class="comments">
+				<h2>Comments</h2>
+				<script
+					src="https://giscus.app/client.js"
+					data-repo="nicksenap/nicksenap.github.io"
+					data-repo-id="MDEwOlJlcG9zaXRvcnk1MTc1ODY4NA=="
+					data-category="Announcements"
+					data-category-id="DIC_kwDOAxXGXM4C4Clv"
+					data-mapping="pathname"
+					data-strict="0"
+					data-reactions-enabled="1"
+					data-emit-metadata="0"
+					data-input-position="top"
+					data-theme="https://nicksenap.github.io/giscus-terminal.css"
+					data-lang="en"
+					crossorigin="anonymous"
+					async
+				></script>
+			</section>
 		</main>
 		<Footer />
 	</body>
@@ -112,5 +131,14 @@ const { title, description, pubDate, updatedDate, tags } = Astro.props;
 	}
 	.post-nav a:hover {
 		opacity: 1;
+	}
+	.comments {
+		margin-top: 3rem;
+		padding-top: 1rem;
+		box-shadow: var(--border) 0 2px 0 0 inset;
+	}
+	.comments h2 {
+		opacity: 0.5;
+		margin-bottom: 1.5rem;
 	}
 </style>

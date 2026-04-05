@@ -7,7 +7,7 @@ import Header from '../components/Header.astro';
 
 type Props = CollectionEntry<'blog'>['data'];
 
-const { title, description, pubDate, updatedDate, tags } = Astro.props;
+const { title, description, pubDate, updatedDate, tags, heroImage } = Astro.props;
 
 const jsonLd = {
 	'@context': 'https://schema.org',
@@ -28,7 +28,7 @@ const jsonLd = {
 
 <html lang="en">
 	<head>
-		<BaseHead title={title} description={description} />
+		<BaseHead title={title} description={description} image={heroImage} />
 		<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 	</head>
 

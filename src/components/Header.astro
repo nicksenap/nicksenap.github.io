@@ -5,7 +5,7 @@ import HeaderLink from './HeaderLink.astro';
 
 <header>
 	<nav>
-		<a href="/" class="site-title">{SITE_TITLE}</a>
+		<a href="/" class="site-title">"{SITE_TITLE}"</a>
 		<div class="nav-right">
 			<div class="nav-links">
 				<HeaderLink href="/">About</HeaderLink>
@@ -62,6 +62,26 @@ import HeaderLink from './HeaderLink.astro';
 	}
 	initTheme();
 	document.addEventListener('astro:after-swap', initTheme);
+
+	function randomizeTitle() {
+		const variants = [
+			{ text: '"OUT OF CONTEXT"', font: "var(--font-mono)" },
+			{ text: '「斷章取義」', font: "'Noto Serif TC', serif" },
+			{ text: '「文脈外」', font: "'Noto Serif JP', serif" },
+			{ text: '"HORS CONTEXTE"', font: "var(--font-mono)" },
+			{ text: '"FUORI CONTESTO"', font: "var(--font-mono)" },
+			{ text: '"UR SITT SAMMANHANG"', font: "var(--font-mono)" },
+			{ text: '«خارج السياق»', font: "'Noto Kufi Arabic', sans-serif" },
+		];
+		const pick = variants[Math.floor(Math.random() * variants.length)];
+		const el = document.querySelector<HTMLElement>('.site-title');
+		if (el) {
+			el.textContent = pick.text;
+			el.style.fontFamily = pick.font;
+		}
+	}
+	randomizeTitle();
+	document.addEventListener('astro:after-swap', randomizeTitle);
 </script>
 
 <style>

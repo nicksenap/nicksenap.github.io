@@ -1,11 +1,10 @@
 ---
-import { SITE_TITLE } from '../consts';
 import HeaderLink from './HeaderLink.astro';
 ---
 
 <header>
 	<nav>
-		<a href="/" class="site-title">"{SITE_TITLE}"</a>
+		<a href="/" class="site-title">「斷章取義」</a>
 		<div class="nav-right">
 			<div class="nav-links">
 				<HeaderLink href="/">About</HeaderLink>
@@ -62,24 +61,6 @@ import HeaderLink from './HeaderLink.astro';
 	}
 	initTheme();
 	document.addEventListener('astro:after-swap', initTheme);
-
-	function randomizeTitle() {
-		const variants = [
-			{ text: '"OUT OF CONTEXT"', font: "var(--font-mono)" },
-			{ text: '「斷章取義」', font: "'Noto Serif TC', serif" },
-			{ text: '「단장취의」', font: "'Noto Serif KR', serif" },
-			{ text: '«خارج السياق»', font: "'Noto Kufi Arabic', sans-serif" },
-			{ text: '«Εκτός συμφραζομένων»', font: "'Noto Serif', serif" },
-		];
-		const pick = variants[Math.floor(Math.random() * variants.length)];
-		const el = document.querySelector<HTMLElement>('.site-title');
-		if (el) {
-			el.textContent = pick.text;
-			el.style.fontFamily = pick.font;
-		}
-	}
-	randomizeTitle();
-	document.addEventListener('astro:after-swap', randomizeTitle);
 </script>
 
 <style>
@@ -94,10 +75,10 @@ import HeaderLink from './HeaderLink.astro';
 		height: 3rem;
 	}
 	.site-title {
+		font-family: 'Noto Serif TC', serif;
 		font-weight: 400;
 		text-decoration: none;
 		color: var(--fg);
-		text-transform: uppercase;
 	}
 	.site-title:hover {
 		text-decoration: none;

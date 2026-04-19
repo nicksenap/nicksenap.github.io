@@ -67,11 +67,9 @@ import HeaderLink from './HeaderLink.astro';
 		const variants = [
 			{ text: '"OUT OF CONTEXT"', font: "var(--font-mono)" },
 			{ text: '「斷章取義」', font: "'Noto Serif TC', serif" },
-			{ text: '「文脈外」', font: "'Noto Serif JP', serif" },
-			{ text: '"HORS CONTEXTE"', font: "var(--font-mono)" },
-			{ text: '"FUORI CONTESTO"', font: "var(--font-mono)" },
-			{ text: '"UR SITT SAMMANHANG"', font: "var(--font-mono)" },
+			{ text: '「단장취의」', font: "'Noto Serif KR', serif" },
 			{ text: '«خارج السياق»', font: "'Noto Kufi Arabic', sans-serif" },
+			{ text: '«Εκτός συμφραζομένων»', font: "'Noto Serif', serif" },
 		];
 		const pick = variants[Math.floor(Math.random() * variants.length)];
 		const el = document.querySelector<HTMLElement>('.site-title');

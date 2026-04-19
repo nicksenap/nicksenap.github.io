@@ -1,6 +1,6 @@
 /* Terminal aesthetic inspired by sacred.computer (SRCL) */
 
-@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;700&family=Noto+Serif+TC:wght@400&family=Noto+Serif+JP:wght@400&family=Noto+Kufi+Arabic:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;700&family=Noto+Serif+TC:wght@400&family=Noto+Serif+KR:wght@400&family=Noto+Kufi+Arabic:wght@400&family=Noto+Serif:wght@400&display=swap');
 
 :root {
 	--font-mono: 'Geist Mono', Consolas, monaco, monospace;

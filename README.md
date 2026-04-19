@@ -1,4 +1,4 @@
-# NICK'S COMPUTER
+# OUT OF CONTEXT
 
 Personal blog built with [Astro](https://astro.build). Terminal aesthetic inspired by [sacred.computer](https://sacred.computer).
 

@@ -77,8 +77,4 @@ jobs:
       - name: Trigger Coolify deploy
         env:
           TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
-        run: |
-          curl -s -X POST "http://100.87.223.114:8000/api/v1/deploy?uuid=o82tztnm4cr1mis4d6d5dg79&force=false" \
-            -H "Authorization: Bearer *** \
-            -H "Content-Type: application/json" \
-            -H "accept: application/json"
+        run: curl -s -X POST "http://100.87.223.114:8000/api/v1/deploy?uuid=o82tztnm4cr1mis4d6d5dg79&force=false" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -H "accept: application/json"

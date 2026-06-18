@@ -1,8 +1,11 @@
 name: Build & Deploy Blog to Mac Mini
 
+# Coolify / self-hosted (Mac Mini) deploy — disabled on push, GitHub Pages only for now.
+# Still runnable manually via the "Run workflow" button (workflow_dispatch).
+# To restore auto-deploy, uncomment the push trigger below.
 on:
-  push:
-    branches: [master]
+  # push:
+  #   branches: [master]
   workflow_dispatch:
 
 permissions:

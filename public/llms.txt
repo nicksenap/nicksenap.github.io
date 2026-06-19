@@ -4,7 +4,7 @@
 
 ## About
 
-Nick is a software engineer currently empowering teams with surprisingly smart tools at Funnel and building dev tools as multipliers for coding agents. Previously at Klarna.
+Nick is a software engineer currently empowering teams with surprisingly smart tools at Funnel.io and building dev tools as multipliers for coding agents. Previously at Klarna.
 
 ## Sections
 

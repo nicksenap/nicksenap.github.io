@@ -5,7 +5,9 @@ pubDate: 2026-08-27
 tags: ["terminal", "ai", "tools"]
 ---
 
-I've been swapping my terminal and coding-agent stack for about three years. Not because I enjoy ricing. Each hop was a response to a specific problem, and the problem kept changing.
+A mux is a terminal multiplexer. One window, many terminals: tabs, split panes, sessions you can detach from and come back to. tmux is the classic. Zellij, cmux, and Herdr are later takes, some of them built around coding agents instead of just shells.
+
+I've been swapping that layer, and the rest of the stack around it, for about three years. Not because I enjoy ricing. Each hop was a response to a specific problem, and the problem kept changing.
 
 I currently run Ghostty + [Herdr](https://herdr.dev) + [Pi](https://pi.dev) + [Helix](https://helix-editor.com). Getting here:
 

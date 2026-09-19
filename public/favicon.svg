@@ -1,5 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="4" fill="#000"/>
-  <text x="16" y="22" font-family="monospace" font-weight="bold" font-size="18" fill="#ef6300" text-anchor="middle">N</text>
-  <rect x="4" y="26" width="24" height="2" fill="#ef6300" opacity="0.6"/>
+  <style>
+    path { stroke: #13110f; }
+    @media (prefers-color-scheme: dark) { path { stroke: #f2f0ee; } }
+  </style>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5.5 10.2 C 8.5 7.6, 13 8.6, 27.5 9.2" stroke-width="3"/>
+    <path d="M11.4 9.4 L 9.6 27" stroke-width="3.3"/>
+    <path d="M21.6 9.4 C 21 17.5, 21.2 23.8, 23.8 26.4 C 25.2 27.6, 26.8 26.6, 27.6 25" stroke-width="3.3"/>
+  </g>
 </svg>

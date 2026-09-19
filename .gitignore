@@ -22,3 +22,8 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# raw video sources for the backdrop (encoded copies live in public/)
+/*.mp4
+/*.mov
+/*.webm

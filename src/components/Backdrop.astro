@@ -1,214 +1,240 @@
 ---
 /**
- * Backdrop: slow dappled shadows + film grain, fixed above everything and blended so text is
- * unaffected. Same mechanism as lefos.com: a looping shadow clip, cover-fit, multiply at ~20%. Off when html.no-fx is set or the user prefers reduced motion
- * (reduced motion keeps a single still frame).
+ * Backdrop scene: a WebGL fragment shader (sea, sky, fog, grain; stars at night), rendered behind
+ * the page and veiled under the text column, like earendil.com. Greyscale only. Day/night follows the
+ * theme. Off under html.no-fx; a single still frame under prefers-reduced-motion.
  */
 ---
 
-<!--
-  Preferred source: a short looping clip of real leaf shadows at /public/shadows-loop-c0c6543a.mp4 (+ .webm).
-  If it is missing or fails, the canvas below draws procedural shadows instead.
--->
-<video class="backdrop-shadows backdrop-video" aria-hidden="true" muted loop playsinline autoplay preload="auto">
-	<source src="/shadows-loop-c0c6543a.webm" type="video/webm" />
-	<source src="/shadows-loop-c0c6543a.mp4" type="video/mp4" />
-</video>
-<canvas class="backdrop-shadows backdrop-canvas" aria-hidden="true" hidden></canvas>
-<div class="backdrop-noise" aria-hidden="true"></div>
+<canvas class="backdrop-night" aria-hidden="true"></canvas>
 
 <script>
-	type Blob = { x: number; y: number; rx: number; ry: number; rot: number; a: number; px: number; py: number; pr: number; sx: number; sy: number };
+	const FRAG = `
+precision highp float;
+uniform vec2 u_res;
+uniform float u_time;
+uniform float u_day; // 0 = night, 1 = day
+
+float hash21(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise21(vec2 p) {
+	vec2 i = floor(p), f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	float a = hash21(i), b = hash21(i + vec2(1, 0)), c = hash21(i + vec2(0, 1)), d = hash21(i + vec2(1, 1));
+	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+float fbm(vec2 p) {
+	float v = 0.0, a = 0.5;
+	for (int i = 0; i < 5; i++) { v += a * noise21(p); p = p * 2.03 + 17.1; a *= 0.5; }
+	return v;
+}
+
+// Sea height at world xz. Slow swell + smaller chop, all drifting toward the camera.
+float sea(vec2 p, float t) {
+	float h = fbm(p * 0.35 + vec2(0.0, -t * 0.12)) * 1.0;
+	h += fbm(p * 1.3 + vec2(t * 0.05, -t * 0.3)) * 0.25;
+	return h;
+}
+
+float star(vec2 uv, vec2 grid) {
+	vec2 cell = floor(uv * grid);
+	float rnd = hash21(cell);
+	if (rnd > 0.22) return 0.0; // sparse
+	vec2 pos = (cell + vec2(hash21(cell + 0.1), hash21(cell + 0.2))) / grid;
+	float dpx = length((uv - pos) * u_res);
+	float size = 0.35 + hash21(cell + 0.3) * 0.5;
+	float core = smoothstep(size, size * 0.2, dpx);
+	float flick = 0.75 + 0.25 * sin(u_time * (0.3 + hash21(cell + 0.5) * 0.5) + hash21(cell + 0.4) * 6.2832);
+	return core * flick * mix(0.5, 1.0, hash21(cell + 0.6));
+}
+
+void main() {
+	vec2 uv = gl_FragCoord.xy / u_res;
+	float aspect = u_res.x / u_res.y;
+	float horizon = 0.40;
+	// page backgrounds: #161616 at night, #ebe7e4 by day
+	vec3 base = mix(vec3(0.086), vec3(0.92), u_day);
+	vec3 col;
+
+	if (uv.y >= horizon) {
+		float h = (uv.y - horizon) / (1.0 - horizon);
+		vec3 night = mix(vec3(0.125), vec3(0.075), pow(h, 0.8));
+		night += star(uv, vec2(70.0 * aspect, 70.0)) * 0.9;
+		night += vec3(0.03) * exp(-h * 14.0);
+		// day: bright hazy sky, slightly darker overhead, thin cloud drift
+		vec3 day = mix(vec3(0.93), vec3(0.80), pow(h, 0.7));
+		float cloud = fbm(vec2(uv.x * 3.0 * aspect + u_time * 0.01, h * 2.0 + 3.0));
+		day += (cloud - 0.5) * 0.06 * (1.0 - h);
+		day += vec3(0.04) * exp(-h * 10.0);
+		col = mix(night, day, u_day);
+	} else {
+		float y = (horizon - uv.y) / horizon;
+		float z = 0.6 / (y + 0.02);
+		float x = (uv.x - 0.5) * aspect * z * 1.6;
+		vec2 p = vec2(x, z);
+		float t = u_time;
+		float eps = 0.02 * z;
+		float hC = sea(p, t);
+		float hX = sea(p + vec2(eps, 0.0), t);
+		float hZ = sea(p + vec2(0.0, eps), t);
+		vec3 n = normalize(vec3(hC - hX, eps * 2.5, hC - hZ));
+		vec3 L = normalize(vec3(0.2, 0.35, -1.0));
+		float diff = max(0.0, dot(n, L));
+		float spec = pow(max(0.0, dot(reflect(-L, n), vec3(0.0, 0.0, 1.0))), 24.0);
+		vec3 night = vec3(0.055) + vec3(0.06) * diff + vec3(0.18) * spec * 0.35;
+		// day: pale water, slopes read as slightly darker, glints nearly white
+		vec3 day = vec3(0.78) + vec3(0.10) * diff + vec3(0.12) * spec;
+		float fog = 1.0 - exp(-z * 0.11);
+		vec3 fogCol = mix(vec3(0.12), vec3(0.90), u_day);
+		col = mix(mix(night, day, u_day), fogCol, fog);
+	}
+
+	vec2 q = uv - 0.5;
+	col *= 1.0 - dot(q, q) * mix(0.35, 0.12, u_day);
+	float g = hash21(gl_FragCoord.xy + fract(u_time * 7.0) * 100.0) - 0.5;
+	col += g * mix(0.035, 0.02, u_day);
+
+	col = mix(base, col, 0.85);
+	gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+	const VERT = `attribute vec2 a; void main(){ gl_Position = vec4(a, 0.0, 1.0); }`;
 
 	function init() {
-		const video = document.querySelector<HTMLVideoElement>('.backdrop-video');
-		const canvas = document.querySelector<HTMLCanvasElement>('.backdrop-canvas');
-		if (!video || !canvas) return;
+		const canvas = document.querySelector<HTMLCanvasElement>('.backdrop-night');
+		if (!canvas) return;
+		const gl = canvas.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'low-power' });
+		if (!gl) return;
 		const root = document.documentElement;
 		const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 
-		// Video path: same mechanism as the reference (loop → cover-fit layer → multiply).
-		let useCanvas = false;
-		const fallback = () => {
-			if (useCanvas) return;
-			useCanvas = true;
-			video.remove();
-			canvas.hidden = false;
-			initCanvas(canvas, root, reduced);
+		const sh = (type: number, src: string) => {
+			const s = gl.createShader(type)!;
+			gl.shaderSource(s, src);
+			gl.compileShader(s);
+			if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) || 'shader');
+			return s;
 		};
-		video.addEventListener('error', (e) => e.target === video && fallback());
-		video.querySelectorAll('source').forEach((src) => src.addEventListener('error', () => {
-			// last source failed → nothing playable
-			if (src === video.lastElementChild) fallback();
-		}));
-		const syncVideo = () => {
-			if (useCanvas) return;
-			if (root.classList.contains('no-fx') || reduced.matches || document.hidden) video.pause();
-			else video.play().catch(() => {});
-		};
-		video.addEventListener('canplay', syncVideo);
-		reduced.addEventListener('change', syncVideo);
-		document.addEventListener('visibilitychange', syncVideo);
-		new MutationObserver(syncVideo).observe(root, { attributes: true, attributeFilter: ['class'] });
-		syncVideo();
-	}
+		let prog: WebGLProgram;
+		try {
+			prog = gl.createProgram()!;
+			gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT));
+			gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
+			gl.linkProgram(prog);
+			if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error('link');
+		} catch (e) {
+			console.warn('[backdrop-night]', e);
+			return;
+		}
+		gl.useProgram(prog);
+		const buf = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+		const a = gl.getAttribLocation(prog, 'a');
+		gl.enableVertexAttribArray(a);
+		gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
+		const uRes = gl.getUniformLocation(prog, 'u_res');
+		const uTime = gl.getUniformLocation(prog, 'u_time');
+		const uDay = gl.getUniformLocation(prog, 'u_day');
+		const isLight = () => root.classList.contains('theme-light');
+		let day = isLight() ? 1 : 0;
 
-	function initCanvas(canvas: HTMLCanvasElement, root: HTMLElement, reduced: MediaQueryList) {
-		const ctx = canvas.getContext('2d')!;
-
-		// Low-res buffer; CSS blur + upscale does the softening.
-		const SCALE = 1 / 4;
-		let W = 0;
-		let H = 0;
+		// Half resolution is plenty for something this soft.
+		const SCALE = 0.5;
 		function resize() {
-			W = Math.max(1, Math.round(innerWidth * SCALE));
-			H = Math.max(1, Math.round(innerHeight * SCALE));
-			canvas.width = W;
-			canvas.height = H;
+			const dpr = Math.min(devicePixelRatio || 1, 2) * SCALE;
+			canvas.width = Math.round(innerWidth * dpr);
+			canvas.height = Math.round(innerHeight * dpr);
+			gl.viewport(0, 0, canvas.width, canvas.height);
 		}
 		resize();
 		addEventListener('resize', resize);
 
-		// Leaf clusters: a few dozen soft ellipses drifting on slow, unrelated sine paths.
-		const rnd = (a: number, b: number) => a + Math.random() * (b - a);
-		const blobs: Blob[] = [];
-		// Two big soft canopy masses give the broad light/dark regions...
-		for (let i = 0; i < 2; i++) {
-			blobs.push({ x: rnd(0.1, 0.9), y: rnd(0.1, 0.9), rx: rnd(0.22, 0.3), ry: rnd(0.12, 0.18), rot: rnd(0, Math.PI), a: 0.28, px: rnd(0, 7), py: rnd(0, 7), pr: rnd(0, 7), sx: 0.5, sy: 0.5 });
-		}
-		// ...and clusters of small elongated leaves along a branch direction give the dapple.
-		const clusters = 7;
-		for (let c = 0; c < clusters; c++) {
-			const cx = rnd(0.05, 0.95);
-			const cy = rnd(0.05, 0.95);
-			const dir = rnd(0, Math.PI);
-			const n = 6 + Math.floor(rnd(0, 6));
-			for (let i = 0; i < n; i++) {
-				const along = rnd(-0.14, 0.14);
-				const across = rnd(-0.05, 0.05);
-				blobs.push({
-					x: cx + Math.cos(dir) * along - Math.sin(dir) * across,
-					y: cy + Math.sin(dir) * along + Math.cos(dir) * across,
-					rx: rnd(0.018, 0.045),
-					ry: rnd(0.008, 0.02),
-					rot: dir + rnd(-0.9, 0.9),
-					a: rnd(0.45, 0.8),
-					px: rnd(0, 7),
-					py: rnd(0, 7),
-					pr: rnd(0, 7),
-					sx: rnd(0.6, 1.4),
-					sy: rnd(0.6, 1.4),
-				});
-			}
-		}
-
-		function draw(t: number) {
-			ctx.clearRect(0, 0, W, H);
-			ctx.fillStyle = '#000';
-			for (const b of blobs) {
-				// Two slow drifts: whole canopy sway (shared) + per-leaf flutter.
-				const sway = Math.sin(t * 0.00012) * 0.015;
-				const x = (b.x + sway + Math.sin(t * 0.00008 * b.sx + b.px) * 0.02) * W;
-				const y = (b.y + Math.cos(t * 0.00006 * b.sy + b.py) * 0.015) * H;
-				const rot = b.rot + Math.sin(t * 0.0001 + b.pr) * 0.15;
-				const breathe = 1 + Math.sin(t * 0.00009 + b.pr) * 0.08;
-				ctx.save();
-				ctx.translate(x, y);
-				ctx.rotate(rot);
-				ctx.scale(breathe, 1);
-				ctx.globalAlpha = b.a;
-				ctx.beginPath();
-				ctx.ellipse(0, 0, b.rx * W, b.ry * W, 0, 0, Math.PI * 2);
-				ctx.fill();
-				ctx.restore();
-			}
+		const t0 = performance.now();
+		function draw() {
+			gl.uniform2f(uRes, canvas.width, canvas.height);
+			day += ((isLight() ? 1 : 0) - day) * 0.08;
+			gl.uniform1f(uDay, Math.abs(day - Math.round(day)) < 0.002 ? Math.round(day) : day);
+			gl.uniform1f(uTime, (performance.now() - t0) / 1000);
+			gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+			root.classList.add('backdrop-night-ready');
 		}
 
 		let raf = 0;
 		let last = 0;
 		function frame(t: number) {
 			raf = requestAnimationFrame(frame);
-			if (t - last < 50) return; // ~20 fps is plenty for something this slow
+			if (t - last < 33) return; // 30 fps
 			last = t;
-			draw(t);
+			draw();
 		}
-		function start() {
+		const active = () => !root.classList.contains('no-fx') && !document.hidden;
+		function sync() {
 			cancelAnimationFrame(raf);
-			if (root.classList.contains('no-fx')) return;
+			if (!active()) return;
 			if (reduced.matches) {
-				draw(0);
+				draw();
 				return;
 			}
 			raf = requestAnimationFrame(frame);
 		}
-		function stop() {
-			cancelAnimationFrame(raf);
-		}
-
-		start();
-		reduced.addEventListener('change', start);
-		document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
-		new MutationObserver(start).observe(root, { attributes: true, attributeFilter: ['class'] });
+		sync();
+		reduced.addEventListener('change', sync);
+		document.addEventListener('visibilitychange', sync);
+		new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['class'] });
 	}
 
 	init();
 </script>
 
 <style is:global>
-	.backdrop-shadows,
-	.backdrop-noise {
+	.backdrop-night {
 		position: fixed;
 		inset: 0;
 		width: 100%;
 		height: 100%;
+		z-index: -2;
 		pointer-events: none;
-		z-index: 50;
+		opacity: 0;
+		transition: opacity 1s;
 	}
-	.backdrop-shadows {
-		mix-blend-mode: multiply;
+	html:not(.no-fx).backdrop-night-ready .backdrop-night {
+		opacity: 1;
 	}
-	/* Clip is dark-on-light (ink in water): native in light theme (multiply), inverted for dark (screen). Swap the inverts for a light-on-dark clip. */
-	.backdrop-video {
-		object-fit: cover;
-		opacity: 0.22;
+	/* Once the first frame exists, the body goes transparent and the scene shows through... */
+	html:not(.no-fx).backdrop-night-ready body {
+		background: transparent;
 	}
-	.backdrop-canvas {
-		/* upscale the tiny buffer, blur the result, and overscan so the blurred edge is offscreen */
-		filter: blur(16px);
-		transform: scale(1.08);
-		opacity: 0.12;
+	/* ...behind a veil in the page colour: near-opaque over the text column, clear at the edges.
+	   Same idea as earendil.com's content pages, centred on our left-aligned column. */
+	html:not(.no-fx).backdrop-night-ready body::before {
+		content: '';
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		pointer-events: none;
+		background: radial-gradient(
+			ellipse min(78vw, 720px) 118% at min(50vw, calc(var(--content-width) / 2)) 48%,
+			rgb(from var(--bg) r g b / 0.985) 0%,
+			rgb(from var(--bg) r g b / 0.985) 42%,
+			rgb(from var(--bg) r g b / 0.95) 54%,
+			rgb(from var(--bg) r g b / 0.7) 68%,
+			rgb(from var(--bg) r g b / 0.3) 82%,
+			rgb(from var(--bg) r g b / 0) 100%
+		);
 	}
-	/* dark theme: shadows become faint light, not dark */
-	html:not(.theme-light) .backdrop-shadows {
-		mix-blend-mode: screen;
+	/* the home page exposes the scene: only a light veil under the intro text */
+	html:not(.no-fx).backdrop-night-ready body.home::before {
+		background: radial-gradient(
+			ellipse min(70vw, 640px) 60% at min(50vw, calc(var(--content-width) / 2)) 22%,
+			rgb(from var(--bg) r g b / 0.7) 0%,
+			rgb(from var(--bg) r g b / 0.55) 45%,
+			rgb(from var(--bg) r g b / 0.2) 75%,
+			rgb(from var(--bg) r g b / 0) 100%
+		);
 	}
-	html:not(.theme-light) .backdrop-video {
-		filter: invert(1);
-		opacity: 0.12;
-	}
-	html:not(.theme-light) .backdrop-canvas {
-		filter: blur(16px) invert(1);
-		opacity: 0.06;
-	}
-	.backdrop-noise {
-		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-		background-size: 160px 160px;
-		mix-blend-mode: multiply;
-		opacity: 0.18;
-	}
-	html:not(.theme-light) .backdrop-noise {
-		mix-blend-mode: screen;
-		opacity: 0.08;
-	}
-	.backdrop-shadows,
-	.backdrop-noise {
-		transition: opacity 0.6s;
-	}
-	html.backdrop-quiet .backdrop-shadows {
-		opacity: 0.03;
-	}
-	html.no-fx .backdrop-shadows,
-	html.no-fx .backdrop-noise {
-		display: none;
+	/* the harness page asks for a quieter backdrop while its model is apart */
+	html.backdrop-quiet .backdrop-night {
+		opacity: 0.4;
 	}
 </style>

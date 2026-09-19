@@ -7,12 +7,12 @@
 ---
 
 <!--
-  Preferred source: a short looping clip of real leaf shadows at /public/shadows-loop-0c768c11.mp4 (+ .webm).
+  Preferred source: a short looping clip of real leaf shadows at /public/shadows-loop-c0c6543a.mp4 (+ .webm).
   If it is missing or fails, the canvas below draws procedural shadows instead.
 -->
 <video class="backdrop-shadows backdrop-video" aria-hidden="true" muted loop playsinline autoplay preload="auto">
-	<source src="/shadows-loop-0c768c11.webm" type="video/webm" />
-	<source src="/shadows-loop-0c768c11.mp4" type="video/mp4" />
+	<source src="/shadows-loop-c0c6543a.webm" type="video/webm" />
+	<source src="/shadows-loop-c0c6543a.mp4" type="video/mp4" />
 </video>
 <canvas class="backdrop-shadows backdrop-canvas" aria-hidden="true" hidden></canvas>
 <div class="backdrop-noise" aria-hidden="true"></div>
@@ -199,6 +199,13 @@
 	html:not(.theme-light) .backdrop-noise {
 		mix-blend-mode: screen;
 		opacity: 0.08;
+	}
+	.backdrop-shadows,
+	.backdrop-noise {
+		transition: opacity 0.6s;
+	}
+	html.backdrop-quiet .backdrop-shadows {
+		opacity: 0.03;
 	}
 	html.no-fx .backdrop-shadows,
 	html.no-fx .backdrop-noise {

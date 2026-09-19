@@ -334,6 +334,9 @@
 			// ---- labels: project, then push apart vertically ----
 			const rect = canvas.getBoundingClientRect();
 			hint.style.opacity = String(1 - Math.min(1, e * 4));
+			// quiet the page backdrop while the model is apart
+			const fr = figure.getBoundingClientRect();
+			document.documentElement.classList.toggle('backdrop-quiet', progress > 0.04 && fr.bottom > 0 && fr.top < innerHeight);
 			const pct = Math.round(progress * 100);
 			if (pct !== lastPct) {
 				lastPct = pct;

@@ -1,6 +1,9 @@
 ---
+import Backdrop from './Backdrop.astro';
 import HeaderLink from './HeaderLink.astro';
 ---
+
+<Backdrop />
 
 <header>
 	<nav>
@@ -15,7 +18,7 @@ import HeaderLink from './HeaderLink.astro';
 			</div>
 			<button class="action-btn" id="theme-toggle" tabindex="0" role="button">
 				<span class="hotkey">&#x2303;+T</span>
-				<span class="label" id="theme-label">Light</span>
+				<span class="label" id="theme-label">Auto</span>
 			</button>
 		</div>
 	</nav>
@@ -27,11 +30,14 @@ import HeaderLink from './HeaderLink.astro';
 		const label = document.getElementById('theme-label');
 		const root = document.documentElement;
 
-		const saved = localStorage.getItem('theme');
-		if (saved === 'light') {
-			root.classList.add('theme-light');
-			if (label) label.textContent = 'Dark';
-		}
+		if (localStorage.getItem('fx') === 'off') root.classList.add('no-fx');
+
+		// Three modes: dark → light → auto (follows the device). Label shows the current mode.
+		const modes = ['dark', 'light', 'auto'] as const;
+		type Mode = (typeof modes)[number];
+		const system = matchMedia('(prefers-color-scheme: light)');
+		let mode: Mode = (localStorage.getItem('theme') as Mode) || 'auto';
+		if (!modes.includes(mode)) mode = 'auto';
 
 		function setGiscusTheme(theme: string) {
 			const iframe = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
@@ -41,14 +47,22 @@ import HeaderLink from './HeaderLink.astro';
 			);
 		}
 
-		function toggleTheme() {
-			root.classList.toggle('theme-light');
-			const isLight = root.classList.contains('theme-light');
-			localStorage.setItem('theme', isLight ? 'light' : 'dark');
-			if (label) label.textContent = isLight ? 'Dark' : 'Light';
+		function apply() {
+			const isLight = mode === 'light' || (mode === 'auto' && system.matches);
+			root.classList.toggle('theme-light', isLight);
+			if (label) label.textContent = mode[0].toUpperCase() + mode.slice(1);
 			const base = window.location.origin;
 			setGiscusTheme(isLight ? `${base}/giscus-terminal-light.css` : `${base}/giscus-terminal.css`);
 		}
+
+		function toggleTheme() {
+			mode = modes[(modes.indexOf(mode) + 1) % modes.length];
+			localStorage.setItem('theme', mode);
+			apply();
+		}
+
+		apply();
+		system.addEventListener('change', () => mode === 'auto' && apply());
 
 		toggle?.addEventListener('click', toggleTheme);
 

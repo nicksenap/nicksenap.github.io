@@ -19,11 +19,24 @@ const status = [
 		))}
 	</span>
 	<div class="footer-links">
+		<button class="fx" id="fx-toggle" type="button" aria-pressed="true" title="toggle background effects">FX</button>
 		<a href="/rss.xml">RSS</a>
 		<a href="https://github.com/nicksenap" target="_blank">GITHUB</a>
 		<a href="https://www.linkedin.com/in/nick-zixian-song" target="_blank">LINKEDIN</a>
 	</div>
 </footer>
+
+<script>
+	const btn = document.getElementById('fx-toggle');
+	const root = document.documentElement;
+	const sync = () => btn?.setAttribute('aria-pressed', String(!root.classList.contains('no-fx')));
+	sync();
+	btn?.addEventListener('click', () => {
+		root.classList.toggle('no-fx');
+		localStorage.setItem('fx', root.classList.contains('no-fx') ? 'off' : 'on');
+		sync();
+	});
+</script>
 
 <style>
 	footer {
@@ -65,14 +78,26 @@ const status = [
 		gap: 1.5ch;
 		flex-shrink: 0;
 	}
-	.footer-links a {
+	.footer-links a,
+	.footer-links .fx {
 		color: var(--fg);
 		text-decoration: none;
 		opacity: 0.5;
 		transition: opacity 0.15s;
 	}
-	.footer-links a:hover {
+	.footer-links .fx {
+		all: unset;
+		cursor: pointer;
+		color: var(--fg);
+		opacity: 0.5;
+		transition: opacity 0.15s;
+	}
+	.footer-links a:hover,
+	.footer-links .fx:hover {
 		opacity: 1;
+	}
+	.footer-links .fx[aria-pressed='false'] {
+		text-decoration: line-through;
 	}
 	@media (max-width: 768px) {
 		footer {

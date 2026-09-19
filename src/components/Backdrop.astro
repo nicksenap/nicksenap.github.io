@@ -1,0 +1,206 @@
+---
+/**
+ * Backdrop: slow dappled shadows + film grain, fixed above everything and blended so text is
+ * unaffected. Same mechanism as lefos.com: a looping shadow clip, cover-fit, multiply at ~20%. Off when html.no-fx is set or the user prefers reduced motion
+ * (reduced motion keeps a single still frame).
+ */
+---
+
+<!--
+  Preferred source: a short looping clip of real leaf shadows at /public/shadows-loop.mp4 (+ .webm).
+  If it is missing or fails, the canvas below draws procedural shadows instead.
+-->
+<video class="backdrop-shadows backdrop-video" aria-hidden="true" muted loop playsinline autoplay preload="auto">
+	<source src="/shadows-loop.webm" type="video/webm" />
+	<source src="/shadows-loop.mp4" type="video/mp4" />
+</video>
+<canvas class="backdrop-shadows backdrop-canvas" aria-hidden="true" hidden></canvas>
+<div class="backdrop-noise" aria-hidden="true"></div>
+
+<script>
+	type Blob = { x: number; y: number; rx: number; ry: number; rot: number; a: number; px: number; py: number; pr: number; sx: number; sy: number };
+
+	function init() {
+		const video = document.querySelector<HTMLVideoElement>('.backdrop-video');
+		const canvas = document.querySelector<HTMLCanvasElement>('.backdrop-canvas');
+		if (!video || !canvas) return;
+		const root = document.documentElement;
+		const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+
+		// Video path: same mechanism as the reference (loop → cover-fit layer → multiply).
+		let useCanvas = false;
+		const fallback = () => {
+			if (useCanvas) return;
+			useCanvas = true;
+			video.remove();
+			canvas.hidden = false;
+			initCanvas(canvas, root, reduced);
+		};
+		video.addEventListener('error', (e) => e.target === video && fallback());
+		video.querySelectorAll('source').forEach((src) => src.addEventListener('error', () => {
+			// last source failed → nothing playable
+			if (src === video.lastElementChild) fallback();
+		}));
+		const syncVideo = () => {
+			if (useCanvas) return;
+			if (root.classList.contains('no-fx') || reduced.matches || document.hidden) video.pause();
+			else video.play().catch(() => {});
+		};
+		video.addEventListener('canplay', syncVideo);
+		reduced.addEventListener('change', syncVideo);
+		document.addEventListener('visibilitychange', syncVideo);
+		new MutationObserver(syncVideo).observe(root, { attributes: true, attributeFilter: ['class'] });
+		syncVideo();
+	}
+
+	function initCanvas(canvas: HTMLCanvasElement, root: HTMLElement, reduced: MediaQueryList) {
+		const ctx = canvas.getContext('2d')!;
+
+		// Low-res buffer; CSS blur + upscale does the softening.
+		const SCALE = 1 / 4;
+		let W = 0;
+		let H = 0;
+		function resize() {
+			W = Math.max(1, Math.round(innerWidth * SCALE));
+			H = Math.max(1, Math.round(innerHeight * SCALE));
+			canvas.width = W;
+			canvas.height = H;
+		}
+		resize();
+		addEventListener('resize', resize);
+
+		// Leaf clusters: a few dozen soft ellipses drifting on slow, unrelated sine paths.
+		const rnd = (a: number, b: number) => a + Math.random() * (b - a);
+		const blobs: Blob[] = [];
+		// Two big soft canopy masses give the broad light/dark regions...
+		for (let i = 0; i < 2; i++) {
+			blobs.push({ x: rnd(0.1, 0.9), y: rnd(0.1, 0.9), rx: rnd(0.22, 0.3), ry: rnd(0.12, 0.18), rot: rnd(0, Math.PI), a: 0.28, px: rnd(0, 7), py: rnd(0, 7), pr: rnd(0, 7), sx: 0.5, sy: 0.5 });
+		}
+		// ...and clusters of small elongated leaves along a branch direction give the dapple.
+		const clusters = 7;
+		for (let c = 0; c < clusters; c++) {
+			const cx = rnd(0.05, 0.95);
+			const cy = rnd(0.05, 0.95);
+			const dir = rnd(0, Math.PI);
+			const n = 6 + Math.floor(rnd(0, 6));
+			for (let i = 0; i < n; i++) {
+				const along = rnd(-0.14, 0.14);
+				const across = rnd(-0.05, 0.05);
+				blobs.push({
+					x: cx + Math.cos(dir) * along - Math.sin(dir) * across,
+					y: cy + Math.sin(dir) * along + Math.cos(dir) * across,
+					rx: rnd(0.018, 0.045),
+					ry: rnd(0.008, 0.02),
+					rot: dir + rnd(-0.9, 0.9),
+					a: rnd(0.45, 0.8),
+					px: rnd(0, 7),
+					py: rnd(0, 7),
+					pr: rnd(0, 7),
+					sx: rnd(0.6, 1.4),
+					sy: rnd(0.6, 1.4),
+				});
+			}
+		}
+
+		function draw(t: number) {
+			ctx.clearRect(0, 0, W, H);
+			ctx.fillStyle = '#000';
+			for (const b of blobs) {
+				// Two slow drifts: whole canopy sway (shared) + per-leaf flutter.
+				const sway = Math.sin(t * 0.00012) * 0.015;
+				const x = (b.x + sway + Math.sin(t * 0.00008 * b.sx + b.px) * 0.02) * W;
+				const y = (b.y + Math.cos(t * 0.00006 * b.sy + b.py) * 0.015) * H;
+				const rot = b.rot + Math.sin(t * 0.0001 + b.pr) * 0.15;
+				const breathe = 1 + Math.sin(t * 0.00009 + b.pr) * 0.08;
+				ctx.save();
+				ctx.translate(x, y);
+				ctx.rotate(rot);
+				ctx.scale(breathe, 1);
+				ctx.globalAlpha = b.a;
+				ctx.beginPath();
+				ctx.ellipse(0, 0, b.rx * W, b.ry * W, 0, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.restore();
+			}
+		}
+
+		let raf = 0;
+		let last = 0;
+		function frame(t: number) {
+			raf = requestAnimationFrame(frame);
+			if (t - last < 50) return; // ~20 fps is plenty for something this slow
+			last = t;
+			draw(t);
+		}
+		function start() {
+			cancelAnimationFrame(raf);
+			if (root.classList.contains('no-fx')) return;
+			if (reduced.matches) {
+				draw(0);
+				return;
+			}
+			raf = requestAnimationFrame(frame);
+		}
+		function stop() {
+			cancelAnimationFrame(raf);
+		}
+
+		start();
+		reduced.addEventListener('change', start);
+		document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+		new MutationObserver(start).observe(root, { attributes: true, attributeFilter: ['class'] });
+	}
+
+	init();
+</script>
+
+<style is:global>
+	.backdrop-shadows,
+	.backdrop-noise {
+		position: fixed;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+		z-index: 50;
+	}
+	.backdrop-shadows {
+		mix-blend-mode: multiply;
+	}
+	.backdrop-video {
+		object-fit: cover;
+		opacity: 0.2;
+	}
+	.backdrop-canvas {
+		/* upscale the tiny buffer, blur the result, and overscan so the blurred edge is offscreen */
+		filter: blur(16px);
+		transform: scale(1.08);
+		opacity: 0.12;
+	}
+	/* dark theme: shadows become faint light, not dark */
+	html:not(.theme-light) .backdrop-shadows {
+		mix-blend-mode: screen;
+	}
+	html:not(.theme-light) .backdrop-video {
+		filter: invert(1);
+		opacity: 0.1;
+	}
+	html:not(.theme-light) .backdrop-canvas {
+		filter: blur(16px) invert(1);
+		opacity: 0.06;
+	}
+	.backdrop-noise {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+		background-size: 160px 160px;
+		mix-blend-mode: multiply;
+		opacity: 0.18;
+	}
+	html:not(.theme-light) .backdrop-noise {
+		mix-blend-mode: screen;
+		opacity: 0.08;
+	}
+	html.no-fx .backdrop-shadows,
+	html.no-fx .backdrop-noise {
+		display: none;
+	}
+</style>

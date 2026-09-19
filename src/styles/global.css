@@ -4,15 +4,15 @@
 
 :root {
 	--font-mono: 'Geist Mono', Consolas, monaco, monospace;
-	--bg: #000000;
+	--bg: #161616;
 	--fg: #ffffff;
-	--border: #393939;
+	--border: #3d3d3d;
 	--accent: #ef6300;
 	--code-bg: rgba(82, 82, 82, 0.3);
 	--action-hotkey-bg: #262626;
 	--action-content-bg: #393939;
 	--selection-bg: #ef6300;
-	--selection-fg: #000000;
+	--selection-fg: #161616;
 	--content-width: 768px;
 	--font-size: 16px;
 	--line-height: 1.25;
@@ -21,13 +21,13 @@
 
 /* Light theme */
 :root.theme-light {
-	--bg: #ffffff;
-	--fg: #000000;
-	--border: #c6c6c6;
+	--bg: #ebe7e4;
+	--fg: #13110f;
+	--border: #c4beb8;
 	--accent: #5cff3b;
-	--code-bg: #f4f4f4;
-	--action-hotkey-bg: #c6c6c6;
-	--action-content-bg: #e0e0e0;
+	--code-bg: #e1dcd7;
+	--action-hotkey-bg: #c4beb8;
+	--action-content-bg: #d8d2cc;
 	--selection-bg: #5cff3b;
 	--selection-fg: #000000;
 }

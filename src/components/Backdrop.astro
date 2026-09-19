@@ -145,6 +145,7 @@ void main() {
 		const uDay = gl.getUniformLocation(prog, 'u_day');
 		const isLight = () => root.classList.contains('theme-light');
 		let day = isLight() ? 1 : 0;
+		let first = true; // snap on the first frame, ease afterwards
 
 		// Half resolution is plenty for something this soft.
 		const SCALE = 0.5;
@@ -160,7 +161,8 @@ void main() {
 		const t0 = performance.now();
 		function draw() {
 			gl.uniform2f(uRes, canvas.width, canvas.height);
-			day += ((isLight() ? 1 : 0) - day) * 0.08;
+			day = first ? (isLight() ? 1 : 0) : day + ((isLight() ? 1 : 0) - day) * 0.08;
+			first = false;
 			gl.uniform1f(uDay, Math.abs(day - Math.round(day)) < 0.002 ? Math.round(day) : day);
 			gl.uniform1f(uTime, (performance.now() - t0) / 1000);
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);

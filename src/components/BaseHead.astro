@@ -16,6 +16,18 @@ const { title, description, image } = Astro.props;
 
 <!-- Global Metadata -->
 <meta charset="utf-8" />
+<!-- Resolve theme + FX before first paint so nothing flashes; Header.astro takes over from here. -->
+<script is:inline>
+	(function () {
+		try {
+			var c = document.documentElement.classList;
+			var t = localStorage.getItem('theme');
+			var light = t === 'light' || ((t === null || t === 'auto') && matchMedia('(prefers-color-scheme: light)').matches);
+			if (light) c.add('theme-light');
+			if (localStorage.getItem('fx') === 'off') c.add('no-fx');
+		} catch (e) {}
+	})();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="icon" href="/favicon.ico" />

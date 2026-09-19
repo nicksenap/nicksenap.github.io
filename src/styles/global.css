@@ -7,6 +7,7 @@
 	--bg: #161616;
 	--fg: #ffffff;
 	--border: #3d3d3d;
+	--dim: #8a8a8a; /* secondary text: legible, still clearly second tier */
 	--accent: #ef6300;
 	--code-bg: rgba(82, 82, 82, 0.3);
 	--action-hotkey-bg: #262626;
@@ -24,6 +25,7 @@
 	--bg: #ebe7e4;
 	--fg: #13110f;
 	--border: #c4beb8;
+	--dim: #7a746e;
 	--accent: #5cff3b;
 	--code-bg: #e1dcd7;
 	--action-hotkey-bg: #c4beb8;

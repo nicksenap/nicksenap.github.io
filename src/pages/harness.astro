@@ -1,0 +1,132 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import HarnessBreakdown from '../components/HarnessBreakdown.astro';
+import { SITE_TITLE } from '../consts';
+import { HARNESS_PARTS } from '../data/harness';
+
+const updated = new Date('2026-09-19');
+const updatedLabel = updated.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Harness — ${SITE_TITLE}`}
+			description="My coding-agent setup, laid out as a Raspberry Pi: terminal, multiplexer, agent, models, and the skills around them."
+		/>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<header class="intro">
+				<div class="meta"><h1>Harness</h1><time datetime={updated.toISOString().slice(0, 10)}>{updatedLabel}</time></div>
+				<p class="lede">
+					What I run when I write code with agents, laid out on a Raspberry Pi because every part has an
+					obvious slot there. Scroll to take it apart.
+				</p>
+			</header>
+
+			<HarnessBreakdown />
+
+			<section class="bom" aria-labelledby="bom-title">
+			<h2 id="bom-title">Parts</h2>
+				<ol class="parts">
+					{HARNESS_PARTS.map((p, i) => (
+						<li class="part" id={`part-${p.id}`}>
+							<span class="idx">{String(i + 1).padStart(2, '0')}</span>
+							<div class="body">
+								<div class="head">
+									<span class="name">
+										{p.url ? <a href={p.url} target="_blank" rel="noopener">{p.name}</a> : p.name}
+									</span>
+									<span class="slot">{p.role} · the {p.part}</span>
+								</div>
+								<p class="blurb">{p.blurb}</p>
+							</div>
+						</li>
+					))}
+				</ol>
+			</section>
+
+			<p class="colophon">
+				Drawn in code with <a href="https://zzz.dog" target="_blank" rel="noopener">Zdog</a>, to the Raspberry Pi 4
+				footprint. The setup changes often; the date above is the last time this page matched it.
+			</p>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.intro {
+		margin-bottom: 1.5rem;
+	}
+	.meta {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 1ch;
+	}
+	.meta time {
+		color: var(--border);
+		font-size: 0.85rem;
+	}
+	.lede {
+		margin: 0;
+		max-width: 60ch;
+	}
+
+	.bom {
+		margin-top: 2rem;
+	}
+	.parts {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		box-shadow: var(--fg) 0 1px 0 0 inset;
+	}
+	.part {
+		display: grid;
+		grid-template-columns: 3ch 1fr;
+		gap: 0 1ch;
+		padding: 1rem 0;
+		box-shadow: var(--border) 0 -1px 0 0 inset;
+	}
+	.idx {
+		color: var(--border);
+	}
+	.head {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 1.5ch;
+		align-items: baseline;
+		margin-bottom: 0.35rem;
+	}
+	.name {
+		font-weight: 700;
+	}
+	.name a {
+		text-decoration: none;
+	}
+	.name a:hover {
+		text-decoration: underline;
+		text-decoration-color: var(--fg);
+	}
+	.slot {
+		color: var(--border);
+	}
+	.blurb {
+		margin: 0;
+		opacity: 0.75;
+		max-width: 62ch;
+	}
+
+	.colophon {
+		margin: 2rem 0 0;
+		font-size: 0.85rem;
+		opacity: 0.5;
+	}
+</style>

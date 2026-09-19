@@ -1,9 +1,23 @@
 ---
-const today = new Date();
+// Mirrors pi's status line: model › thinking › cwd › branch. The model segment links to the harness page.
+const status = [
+	{ text: 'Fable 5.1', href: '/harness', title: 'the harness, taken apart' },
+	{ text: 'think:high' },
+	{ text: '~/blog' },
+	{ text: 'master' },
+];
 ---
 
 <footer>
-	<span>⏵⏵ bypass permissions on (shift+tab to cycle)</span>
+	<span class="status" aria-label="status line">
+		<span class="glyph">⬡</span>
+		{status.map((s, i) => (
+			<span class="seg">
+				{i > 0 && <span class="sep">〉</span>}
+				{s.href ? <a href={s.href} title={s.title}>{s.text}</a> : s.text}
+			</span>
+		))}
+	</span>
 	<div class="footer-links">
 		<a href="/rss.xml">RSS</a>
 		<a href="https://github.com/nicksenap" target="_blank">GITHUB</a>
@@ -19,10 +33,37 @@ const today = new Date();
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		gap: 2ch;
+	}
+	.status {
+		display: flex;
+		align-items: center;
+		gap: 0.75ch;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.status .glyph {
+		opacity: 0.5;
+	}
+	.status .seg {
+		display: inline-flex;
+		gap: 0.75ch;
+	}
+	.status .sep {
+		opacity: 0.35;
+	}
+	.status a {
+		text-decoration: none;
+		text-decoration-color: var(--border);
+	}
+	.status a:hover {
+		text-decoration: underline;
 	}
 	.footer-links {
 		display: flex;
 		gap: 1.5ch;
+		flex-shrink: 0;
 	}
 	.footer-links a {
 		color: var(--fg);
@@ -36,6 +77,9 @@ const today = new Date();
 	@media (max-width: 768px) {
 		footer {
 			font-size: 0.75rem;
+		}
+		.status .seg:nth-child(n + 4) {
+			display: none;
 		}
 	}
 </style>

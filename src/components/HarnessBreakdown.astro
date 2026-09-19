@@ -1,0 +1,499 @@
+---
+/**
+ * Exploded view of "the rig": my agent harness drawn as a PC build, in Zdog.
+ * Scroll to explode, drag to rotate. Labels are HTML; leader lines drawn on canvas.
+ */
+---
+
+<div class="harness-scroll" data-harness>
+	<figure class="harness">
+		<canvas class="harness-canvas" width="720" height="720"></canvas>
+		<div class="harness-labels"></div>
+		<figcaption>
+			<span class="harness-hint">scroll ↓</span>
+			<span class="harness-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="exploded">
+				<span class="k">assembled</span>
+				<span class="track"><i></i></span>
+				<span class="k">exploded</span>
+			</span>
+			<span class="harness-hint harness-hint-drag">drag to rotate</span>
+		</figcaption>
+	</figure>
+</div>
+
+<script>
+	import Zdog from 'zdog';
+	import { HARNESS_PARTS } from '../data/harness';
+
+	type PartDef = {
+		id: string;
+		pos: { x: number; y: number; z: number }; // rest position of the part's anchor
+		lift: number; // y offset when fully exploded (negative = up)
+		label?: false; // unlabelled decoration (e.g. the case lid)
+		build: (a: Zdog.Anchor, c: Colors) => void;
+	};
+	type Colors = { fg: string; dim: string; accent: string };
+	type Part = PartDef & { anchor: Zdog.Anchor; el: HTMLElement; px: number; py: number; ly: number };
+
+	const TAU = Zdog.TAU;
+
+	function init(root: HTMLElement) {
+		const canvas = root.querySelector('canvas') as HTMLCanvasElement;
+		const labelsEl = root.querySelector('.harness-labels') as HTMLElement;
+		const readColors = (): Colors => {
+			const css = getComputedStyle(document.documentElement);
+			return {
+				fg: css.getPropertyValue('--fg').trim() || '#fff',
+				dim: css.getPropertyValue('--border').trim() || '#666',
+				accent: css.getPropertyValue('--accent').trim() || '#ef6300',
+			};
+		};
+		// Build with tier sentinels, then remap to real colors (and again on theme toggle).
+		const c: Colors = { fg: '__fg', dim: '__dim', accent: '__accent' };
+		let live = readColors();
+		function applyColors(item: any) {
+			if (typeof item.color === 'string') {
+				if (!item._tier) item._tier = item.color.replace('__', '');
+				item.color = (live as any)[item._tier] ?? item.color;
+			}
+			if (typeof item.backface === 'string') item.backface = live.dim;
+			item.children?.forEach(applyColors);
+		}
+		new MutationObserver(() => {
+			live = readColors();
+			applyColors(illo);
+		}).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+		const wire = (color: string, stroke = 1.5) => ({ stroke, color, fill: false });
+
+		const illo = new Zdog.Illustration({
+			element: canvas,
+			dragRotate: true,
+			rotate: { x: -TAU / 12, y: TAU / 10 },
+			translate: { x: -60, y: 90 },
+			resize: true,
+		});
+
+		// ---- footprint helper: outline on the board where a component sits ----
+		const footprints: { x: number; z: number; w: number; d: number }[] = [];
+		const fp = (x: number, z: number, w: number, d: number) => footprints.push({ x, z, w, d });
+
+		// Raspberry Pi 4, roughly to scale (1 mm = 3 units). x: left→right, z: back→front, y: down.
+		const BW = 255; // 85 mm
+		const BD = 168; // 56 mm
+		const defs: PartDef[] = [
+			{
+				id: 'lid',
+				label: false,
+				pos: { x: 0, y: -30, z: 0 },
+				lift: -340,
+				build(a, c) {
+					new Zdog.Rect({ addTo: a, width: BW + 24, height: BD + 24, rotate: { x: TAU / 4 }, ...wire(c.dim) });
+					new Zdog.Rect({ addTo: a, width: BW + 24, height: BD + 24, rotate: { x: TAU / 4 }, translate: { y: 12 }, ...wire(c.dim) });
+					for (const [x, z] of corners(BW / 2 + 12, BD / 2 + 12)) new Zdog.Shape({ addTo: a, path: [{ x, y: 0, z }, { x, y: 12, z }], ...wire(c.dim) });
+					// vent slots
+					for (let i = -3; i <= 3; i++) new Zdog.Shape({ addTo: a, path: [{ x: -40 + i * 12, y: 0, z: -30 }, { x: -40 + i * 12, y: 0, z: 30 }], ...wire(c.dim, 1) });
+				},
+			},
+			{
+				id: 'ghostty',
+				pos: { x: 0, y: 26, z: 0 },
+				lift: 90,
+				build(a, c) {
+					const w = BW + 24;
+					const d = BD + 24;
+					new Zdog.Rect({ addTo: a, width: w, height: d, rotate: { x: TAU / 4 }, translate: { y: 8 }, ...wire(c.dim) });
+					new Zdog.Rect({ addTo: a, width: w, height: d, rotate: { x: TAU / 4 }, translate: { y: -14 }, ...wire(c.dim) });
+					for (const [x, z] of corners(w / 2, d / 2)) new Zdog.Shape({ addTo: a, path: [{ x, y: -14, z }, { x, y: 8, z }], ...wire(c.dim) });
+					for (const [x, z] of holes()) new Zdog.Cylinder({ addTo: a, diameter: 6, length: 8, translate: { x, y: -6, z }, rotate: { x: TAU / 4 }, ...wire(c.dim) });
+					// ghost eyes on the front wall
+					new Zdog.Shape({ addTo: a, translate: { x: -8, y: -4, z: d / 2 + 0.5 }, stroke: 4, color: c.dim });
+					new Zdog.Shape({ addTo: a, translate: { x: 8, y: -4, z: d / 2 + 0.5 }, stroke: 4, color: c.dim });
+				},
+			},
+			{
+				id: 'herdr',
+				pos: { x: 0, y: 0, z: 0 },
+				lift: 0,
+				build(a, c) {
+					new Zdog.Rect({ addTo: a, width: BW, height: BD, rotate: { x: TAU / 4 }, ...wire(c.fg) });
+					new Zdog.Rect({ addTo: a, width: BW, height: BD, rotate: { x: TAU / 4 }, translate: { y: 4 }, ...wire(c.dim, 1) });
+					for (const [x, z] of holes()) new Zdog.Ellipse({ addTo: a, diameter: 8, rotate: { x: TAU / 4 }, translate: { x, y: -0.5, z }, ...wire(c.dim, 1) });
+					// fixed peripherals that stay on the board
+					new Zdog.Box({ addTo: a, width: 27, height: 10, depth: 24, translate: { x: -90, y: -5, z: BD / 2 - 8 }, ...wire(c.dim, 1) }); // USB-C power
+					new Zdog.Cylinder({ addTo: a, diameter: 18, length: 30, translate: { x: 25, y: -9, z: BD / 2 - 12 }, ...wire(c.dim, 1) }); // audio jack
+					new Zdog.Box({ addTo: a, width: 8, height: 14, depth: 66, translate: { x: -BW / 2 + 8, y: -7, z: 0 }, ...wire(c.dim, 1) }); // DSI
+					new Zdog.Box({ addTo: a, width: 12, height: 6, depth: 12, translate: { x: 70, y: -3, z: 20 }, ...wire(c.dim, 1) }); // USB controller
+					for (const t of [
+						[{ x: -8, z: -20 }, { x: -8, z: -40 }, { x: 40, z: -40 }],
+						[{ x: 10, z: 24 }, { x: 10, z: 50 }, { x: -20, z: 50 }],
+						[{ x: 48, z: 0 }, { x: 68, z: 0 }, { x: 68, z: -30 }],
+						[{ x: -60, z: 10 }, { x: -60, z: 40 }, { x: -85, z: 40 }],
+					]) trace(a, c, t);
+					for (const f of footprints) new Zdog.Rect({ addTo: a, width: f.w, height: f.d, translate: { x: f.x, y: -0.5, z: f.z }, rotate: { x: TAU / 4 }, ...wire(c.dim, 1) });
+				},
+			},
+			{
+				id: 'pi',
+				pos: { x: -35, y: -4, z: 0 },
+				lift: -70,
+				build(a, c) {
+					fp(-35, 0, 48, 48);
+					new Zdog.Box({ addTo: a, width: 45, height: 6, depth: 45, ...wire(c.fg) });
+					new Zdog.Rect({ addTo: a, width: 30, height: 30, translate: { y: -3.5 }, rotate: { x: TAU / 4 }, ...wire(c.accent) });
+					new Zdog.Shape({ addTo: a, path: [{ x: -8, y: -4, z: -5 }, { x: 8, y: -4, z: -5 }], stroke: 2.5, color: c.accent });
+					new Zdog.Shape({ addTo: a, path: [{ x: -4, y: -4, z: -5 }, { x: -4, y: -4, z: 7 }], stroke: 2.5, color: c.accent });
+					new Zdog.Shape({ addTo: a, path: [{ x: 4, y: -4, z: -5 }, { x: 4, y: -4, z: 7 }], stroke: 2.5, color: c.accent });
+				},
+			},
+			{
+				id: 'brain',
+				pos: { x: -BW / 2 - 4, y: 7, z: 0 },
+				lift: 60,
+				build(a, c) {
+					// microSD, slotted under the left edge
+					new Zdog.Shape({
+						addTo: a,
+						path: [{ x: -16, z: -18 }, { x: 14, z: -18 }, { x: 14, z: 18 }, { x: -10, z: 18 }, { x: -16, z: 12 }],
+						...wire(c.fg),
+					});
+					new Zdog.Shape({
+						addTo: a,
+						path: [{ x: -16, y: 3, z: -18 }, { x: 14, y: 3, z: -18 }, { x: 14, y: 3, z: 18 }, { x: -10, y: 3, z: 18 }, { x: -16, y: 3, z: 12 }],
+						...wire(c.dim, 1),
+					});
+					for (let i = 0; i < 6; i++) new Zdog.Shape({ addTo: a, path: [{ x: 8, y: 0, z: -14 + i * 5 }, { x: 13, y: 0, z: -14 + i * 5 }], stroke: 1.5, color: c.accent });
+				},
+			},
+			{
+				id: 'workers',
+				pos: { x: 22, y: -3, z: 0 },
+				lift: -120,
+				build(a, c) {
+					fp(22, 0, 36, 44);
+					new Zdog.Box({ addTo: a, width: 33, height: 4, depth: 40, ...wire(c.fg) });
+					new Zdog.Shape({ addTo: a, path: [{ x: -10, y: -2.5, z: -12 }, { x: 10, y: -2.5, z: -12 }], ...wire(c.dim, 1) });
+					new Zdog.Shape({ addTo: a, path: [{ x: -10, y: -2.5, z: -6 }, { x: 4, y: -2.5, z: -6 }], ...wire(c.dim, 1) });
+					new Zdog.Shape({ addTo: a, translate: { x: 10, y: -2.5, z: 12 }, stroke: 3, color: c.accent });
+				},
+			},
+			{
+				id: 'scout',
+				pos: { x: -98, y: -6, z: -42 },
+				lift: -240,
+				build(a, c) {
+					fp(-98, -42, 40, 40);
+					new Zdog.Box({ addTo: a, width: 36, height: 9, depth: 36, ...wire(c.fg) });
+					// antenna trace
+					new Zdog.Shape({ addTo: a, path: [{ x: -12, y: -5, z: -8 }, { x: 12, y: -5, z: -8 }, { x: 12, y: -5, z: 8 }, { x: -12, y: -5, z: 8 }], closed: false, stroke: 1.5, color: c.accent });
+					new Zdog.Shape({ addTo: a, translate: { y: -5 }, stroke: 3, color: c.accent });
+				},
+			},
+			{
+				id: 'skills',
+				pos: { x: -20, y: -8, z: -BD / 2 + 9 },
+				lift: -150,
+				build(a, c) {
+					fp(-20, -BD / 2 + 9, 156, 16);
+					new Zdog.Box({ addTo: a, width: 153, height: 12, depth: 15, ...wire(c.fg) });
+					for (let i = 0; i < 20; i++) {
+						const x = -72 + i * 7.6;
+						for (const z of [-3.8, 3.8]) {
+							new Zdog.Shape({ addTo: a, path: [{ x, y: -6, z }, { x, y: -14, z }], ...wire(c.dim, 1) });
+						}
+					}
+					new Zdog.Shape({ addTo: a, translate: { x: -72, y: -14, z: 3.8 }, stroke: 3, color: c.accent }); // pin 1
+				},
+			},
+			{
+				id: 'browser',
+				pos: { x: -40, y: -6, z: BD / 2 - 12 },
+				lift: -140,
+				build(a, c) {
+					fp(-40, BD / 2 - 12, 62, 24);
+					for (const dx of [-16, 16]) {
+						new Zdog.Box({ addTo: a, width: 22, height: 10, depth: 24, translate: { x: dx }, ...wire(c.fg) });
+						new Zdog.Rect({ addTo: a, width: 14, height: 4, translate: { x: dx, y: -1, z: 12.5 }, ...wire(c.dim, 1) });
+					}
+				},
+			},
+			{
+				id: 'mcp',
+				pos: { x: BW / 2 - 20, y: -22, z: 30 },
+				lift: -50,
+				build(a, c) {
+					fp(BW / 2 - 20, 30, 46, 92);
+					for (const dz of [-24, 24]) {
+						new Zdog.Box({ addTo: a, width: 52, height: 44, depth: 40, translate: { z: dz }, ...wire(c.fg) });
+						for (const dy of [-11, 11]) new Zdog.Rect({ addTo: a, width: 12, height: 32, translate: { x: 26.5, y: dy, z: dz }, rotate: { y: TAU / 4 }, ...wire(c.dim, 1) });
+					}
+				},
+			},
+			{
+				id: 'context',
+				pos: { x: BW / 2 - 20, y: -20, z: -52 },
+				lift: -200,
+				build(a, c) {
+					fp(BW / 2 - 20, -52, 46, 48);
+					new Zdog.Box({ addTo: a, width: 52, height: 40, depth: 46, ...wire(c.fg) });
+					new Zdog.Rect({ addTo: a, width: 30, height: 24, translate: { x: 26.5, y: 2 }, rotate: { y: TAU / 4 }, ...wire(c.dim, 1) });
+					// funnel glyph on top: wide in, narrow out
+					new Zdog.Shape({
+						addTo: a,
+						path: [{ x: -10, y: -20.5, z: -8 }, { x: 10, y: -20.5, z: -8 }, { x: 2, y: -20.5, z: 2 }, { x: 2, y: -20.5, z: 10 }, { x: -2, y: -20.5, z: 10 }, { x: -2, y: -20.5, z: 2 }],
+						stroke: 1.5,
+						color: c.accent,
+					});
+				},
+			},
+			{
+				id: 'grove',
+				pos: { x: 45, y: -7, z: 52 },
+				lift: -290,
+				build(a, c) {
+					fp(45, 52, 10, 70);
+					new Zdog.Box({ addTo: a, width: 7, height: 14, depth: 66, ...wire(c.fg) });
+					// ribbon stub + lens
+					new Zdog.Rect({ addTo: a, width: 5, height: 60, translate: { y: -7.5 }, rotate: { x: TAU / 4 }, ...wire(c.dim, 1) });
+					new Zdog.Shape({ addTo: a, translate: { y: -7.5 }, stroke: 3, color: c.accent });
+				},
+			},
+		];
+
+		function corners(hx: number, hz: number): [number, number][] {
+			return [[-hx, -hz], [hx, -hz], [hx, hz], [-hx, hz]];
+		}
+		function holes(): [number, number][] {
+			// Pi 4 mounting holes: 3.5 mm in from the left, 58 mm apart, 49 mm apart front-back
+			const x0 = -BW / 2 + 10.5;
+			return [[x0, -73.5], [x0 + 174, -73.5], [x0, 73.5], [x0 + 174, 73.5]];
+		}
+		function trace(a: Zdog.Anchor, c: Colors, pts: { x: number; z: number }[]) {
+			new Zdog.Shape({ addTo: a, path: pts.map((p) => ({ x: p.x, y: -0.5, z: p.z })), closed: false, ...wire(c.dim, 1) });
+		}
+
+		// Build: components first (register footprints), then the board reads them.
+		const parts: Part[] = [];
+		const order = [...defs.filter((d) => d.id !== 'herdr'), defs.find((d) => d.id === 'herdr')!];
+		for (const d of order) {
+			const anchor = new Zdog.Anchor({ addTo: illo, translate: { ...d.pos } });
+			d.build(anchor, c);
+			const el = document.createElement('div');
+			el.className = 'harness-label';
+			const meta = HARNESS_PARTS.find((p) => p.id === d.id);
+			if (meta && d.label !== false) {
+				el.innerHTML = `<b>${meta.name}</b><span>${meta.role} · the ${meta.part}</span>`;
+				labelsEl.appendChild(el);
+			}
+			parts.push({ ...d, anchor, el, px: 0, py: 0, ly: 0 });
+		}
+		applyColors(illo);
+		const hint = root.querySelector('.harness-hint') as HTMLElement;
+		const progressEl = root.querySelector('.harness-progress') as HTMLElement;
+		const fill = root.querySelector('.track i') as HTMLElement;
+		let lastPct = -1;
+
+		// ---- scroll-driven explode: progress = how far through the sticky wrapper we've scrolled ----
+		const figure = root.querySelector('.harness') as HTMLElement;
+		let target = 0;
+		let progress = 0;
+		function computeTarget() {
+			const r = root.getBoundingClientRect();
+			const travel = r.height - figure.offsetHeight; // distance the figure stays pinned
+			const pinTop = (window.innerHeight - figure.offsetHeight) / 2;
+			figure.style.top = `${pinTop}px`;
+			const scrolled = pinTop - r.top;
+			target = Math.min(1, Math.max(0, scrolled / travel));
+		}
+		window.addEventListener('scroll', computeTarget, { passive: true });
+		window.addEventListener('resize', computeTarget);
+		computeTarget();
+
+		const ease = (t: number) => t * t * (3 - 2 * t);
+		const baseY = illo.rotate.y;
+		let spin = 0;
+
+		function frame() {
+			progress += (target - progress) * 0.08;
+			const e = ease(progress);
+			spin += 0.002;
+			if (!(illo as any).isDragging) illo.rotate.y = baseY + Math.sin(spin) * 0.25;
+
+			for (const p of parts) {
+				p.anchor.translate.y = p.pos.y + p.lift * e;
+				const s = 1 + 0.25 * e;
+				p.anchor.translate.x = p.pos.x * s;
+				p.anchor.translate.z = p.pos.z * s;
+			}
+			const cssWidth = canvas.getBoundingClientRect().width;
+			const compact = cssWidth < 520;
+			illo.zoom = cssWidth / (compact ? 420 : 700);
+			illo.translate.x = compact ? 0 : -70;
+			illo.translate.y = 20 + 30 * e;
+			illo.updateRenderGraph();
+
+			// ---- labels: project, then push apart vertically ----
+			const rect = canvas.getBoundingClientRect();
+			hint.style.opacity = String(1 - Math.min(1, e * 4));
+			const pct = Math.round(progress * 100);
+			if (pct !== lastPct) {
+				lastPct = pct;
+				fill.style.transform = `scaleX(${progress})`;
+				progressEl.setAttribute('aria-valuenow', String(pct));
+			}
+			if (compact) {
+				for (const p of parts) p.el.style.opacity = '0';
+				requestAnimationFrame(frame);
+				return;
+			}
+			const scale = rect.width / canvas.width;
+			const cx = canvas.width / 2;
+			const cy = canvas.height / 2;
+			const labelled = parts.filter((p) => p.label !== false);
+			for (const p of labelled) {
+				const o = p.anchor.renderOrigin;
+				p.px = (cx + o.x * illo.zoom) * scale;
+				p.py = (cy + o.y * illo.zoom) * scale;
+				p.ly = p.py;
+			}
+			const sorted = [...labelled].sort((a, b) => a.py - b.py);
+			const minGap = 30;
+			for (let i = 1; i < sorted.length; i++) {
+				if (sorted[i].ly - sorted[i - 1].ly < minGap) sorted[i].ly = sorted[i - 1].ly + minGap;
+			}
+			// recentre the column so it doesn't drift down
+			const drift = (sorted[sorted.length - 1].ly - sorted[sorted.length - 1].py) / 2;
+			for (const p of labelled) p.ly -= drift;
+
+			const labelX = rect.width * 0.72;
+			const alpha = Math.max(0, (e - 0.3) / 0.7);
+			const ctx = illo.ctx;
+			ctx.save();
+			ctx.scale(1 / scale, 1 / scale);
+			ctx.setLineDash([2, 3]);
+			ctx.lineWidth = 1;
+			ctx.strokeStyle = live.dim;
+			ctx.globalAlpha = alpha;
+			for (const p of labelled) {
+				p.el.style.transform = `translate(${labelX + 10}px, ${p.ly}px)`;
+				p.el.style.opacity = String(alpha);
+				ctx.beginPath();
+				ctx.moveTo(p.px, p.py);
+				ctx.lineTo(labelX - 6, p.ly);
+				ctx.lineTo(labelX + 4, p.ly);
+				ctx.stroke();
+			}
+			ctx.restore();
+			requestAnimationFrame(frame);
+		}
+		frame();
+	}
+
+	document.querySelectorAll<HTMLElement>('[data-harness]').forEach(init);
+</script>
+
+<style is:global>
+	.harness-scroll {
+		height: 260vh;
+		margin: 0;
+	}
+	.harness {
+		position: sticky;
+		top: 0;
+		margin: 0 auto;
+		width: min(100%, 72vh);
+		aspect-ratio: 1;
+		user-select: none;
+	}
+	.harness-canvas {
+		display: block;
+		width: 100%;
+		height: 100%;
+		cursor: grab;
+		touch-action: none;
+	}
+	.harness-canvas:active {
+		cursor: grabbing;
+	}
+	.harness-labels {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+	.harness-label {
+		position: absolute;
+		top: 0;
+		left: 0;
+		transform: translate(-1000px, -1000px);
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		line-height: 1.2;
+		color: var(--fg);
+		white-space: nowrap;
+		margin-top: -1.2em;
+		opacity: 0;
+	}
+	.harness-label b {
+		display: block;
+		font-weight: 600;
+	}
+	.harness-label span {
+		display: block;
+		color: var(--border);
+	}
+	.harness figcaption {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0.25rem;
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		align-items: center;
+		gap: 2ch;
+		font-size: 0.75rem;
+		color: var(--border);
+		pointer-events: none;
+	}
+	.harness-hint {
+		transition: opacity 0.2s;
+	}
+	.harness-hint-drag {
+		text-align: right;
+		opacity: 1 !important;
+	}
+	.harness-progress {
+		display: flex;
+		align-items: center;
+		gap: 1ch;
+	}
+	.harness-progress .track {
+		position: relative;
+		width: 16ch;
+		height: 1px;
+		background: var(--border);
+	}
+	.harness-progress .track i {
+		position: absolute;
+		inset: -1px 0;
+		background: var(--fg);
+		transform-origin: left;
+		transform: scaleX(0);
+	}
+	.harness-progress .track::after {
+		content: '';
+		position: absolute;
+		right: -1px;
+		top: -3px;
+		width: 1px;
+		height: 7px;
+		background: var(--border);
+	}
+	@media (max-width: 519px) {
+		.harness figcaption {
+			grid-template-columns: 1fr;
+			justify-items: center;
+		}
+		.harness-hint {
+			display: none;
+		}
+	}
+</style>

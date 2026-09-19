@@ -167,9 +167,11 @@
 	.backdrop-shadows {
 		mix-blend-mode: multiply;
 	}
+	/* Clip is light-on-dark: native in dark theme (screen), inverted for light (multiply). Swap the inverts for a dark-on-light clip. */
 	.backdrop-video {
 		object-fit: cover;
-		opacity: 0.2;
+		filter: invert(1);
+		opacity: 0.22;
 	}
 	.backdrop-canvas {
 		/* upscale the tiny buffer, blur the result, and overscan so the blurred edge is offscreen */
@@ -182,8 +184,8 @@
 		mix-blend-mode: screen;
 	}
 	html:not(.theme-light) .backdrop-video {
-		filter: invert(1);
-		opacity: 0.1;
+		filter: none;
+		opacity: 0.16;
 	}
 	html:not(.theme-light) .backdrop-canvas {
 		filter: blur(16px) invert(1);

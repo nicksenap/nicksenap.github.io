@@ -7,12 +7,12 @@
 ---
 
 <!--
-  Preferred source: a short looping clip of real leaf shadows at /public/shadows-loop.mp4 (+ .webm).
+  Preferred source: a short looping clip of real leaf shadows at /public/shadows-loop-0c768c11.mp4 (+ .webm).
   If it is missing or fails, the canvas below draws procedural shadows instead.
 -->
 <video class="backdrop-shadows backdrop-video" aria-hidden="true" muted loop playsinline autoplay preload="auto">
-	<source src="/shadows-loop.webm" type="video/webm" />
-	<source src="/shadows-loop.mp4" type="video/mp4" />
+	<source src="/shadows-loop-0c768c11.webm" type="video/webm" />
+	<source src="/shadows-loop-0c768c11.mp4" type="video/mp4" />
 </video>
 <canvas class="backdrop-shadows backdrop-canvas" aria-hidden="true" hidden></canvas>
 <div class="backdrop-noise" aria-hidden="true"></div>
@@ -167,10 +167,9 @@
 	.backdrop-shadows {
 		mix-blend-mode: multiply;
 	}
-	/* Clip is light-on-dark: native in dark theme (screen), inverted for light (multiply). Swap the inverts for a dark-on-light clip. */
+	/* Clip is dark-on-light (ink in water): native in light theme (multiply), inverted for dark (screen). Swap the inverts for a light-on-dark clip. */
 	.backdrop-video {
 		object-fit: cover;
-		filter: invert(1);
 		opacity: 0.22;
 	}
 	.backdrop-canvas {
@@ -184,8 +183,8 @@
 		mix-blend-mode: screen;
 	}
 	html:not(.theme-light) .backdrop-video {
-		filter: none;
-		opacity: 0.16;
+		filter: invert(1);
+		opacity: 0.12;
 	}
 	html:not(.theme-light) .backdrop-canvas {
 		filter: blur(16px) invert(1);

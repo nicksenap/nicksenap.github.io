@@ -282,6 +282,7 @@
 			const meta = HARNESS_PARTS.find((p) => p.id === d.id);
 			if (meta && d.label !== false) {
 				el.innerHTML = `<b>${meta.name}</b><span>${meta.role} · the ${meta.part}</span>`;
+				el.dataset.idx = String(HARNESS_PARTS.indexOf(meta) + 1).padStart(2, '0');
 				labelsEl.appendChild(el);
 			}
 			parts.push({ ...d, anchor, el, px: 0, py: 0, ly: 0 });
@@ -325,10 +326,12 @@
 				p.anchor.translate.z = p.pos.z * s;
 			}
 			const cssWidth = canvas.getBoundingClientRect().width;
+			const cssHeight = canvas.getBoundingClientRect().height;
 			const compact = cssWidth < 520;
-			illo.zoom = cssWidth / (compact ? 420 : 700);
+			// compact: portrait canvas, fit the exploded stack by height as well as width
+			illo.zoom = compact ? Math.min(cssWidth / 400, cssHeight / 640) : cssWidth / 700;
 			illo.translate.x = compact ? 0 : -70;
-			illo.translate.y = 20 + 30 * e;
+			illo.translate.y = compact ? 40 + 10 * e : 20 + 30 * e;
 			illo.updateRenderGraph();
 
 			// ---- labels: project, then push apart vertically ----
@@ -343,20 +346,25 @@
 				fill.style.transform = `scaleX(${progress})`;
 				progressEl.setAttribute('aria-valuenow', String(pct));
 			}
-			if (compact) {
-				for (const p of parts) p.el.style.opacity = '0';
-				requestAnimationFrame(frame);
-				return;
-			}
+			// renderOrigin is in CSS px around the canvas centre (Zdog applies devicePixelRatio itself)
 			const scale = rect.width / canvas.width;
-			const cx = canvas.width / 2;
-			const cy = canvas.height / 2;
 			const labelled = parts.filter((p) => p.label !== false);
 			for (const p of labelled) {
 				const o = p.anchor.renderOrigin;
-				p.px = (cx + o.x * illo.zoom) * scale;
-				p.py = (cy + o.y * illo.zoom) * scale;
+				p.px = rect.width / 2 + o.x * illo.zoom;
+				p.py = rect.height / 2 + o.y * illo.zoom;
 				p.ly = p.py;
+			}
+			labelsEl.classList.toggle('compact', compact);
+			if (compact) {
+				// no room for names: pin the part's index from the list below next to it
+				const alpha = Math.max(0, (e - 0.3) / 0.7);
+				for (const p of labelled) {
+					p.el.style.transform = `translate(${p.px + 8}px, ${p.py - 6}px)`;
+					p.el.style.opacity = String(alpha);
+				}
+				requestAnimationFrame(frame);
+				return;
 			}
 			const sorted = [...labelled].sort((a, b) => a.py - b.py);
 			const minGap = 30;
@@ -407,6 +415,13 @@
 		aspect-ratio: 1;
 		user-select: none;
 	}
+	@media (max-width: 560px) {
+		.harness {
+			width: 100%;
+			aspect-ratio: auto;
+			height: min(76vh, 600px);
+		}
+	}
 	.harness-canvas {
 		display: block;
 		width: 100%;
@@ -438,6 +453,18 @@
 	.harness-label b {
 		display: block;
 		font-weight: 600;
+	}
+	.harness-labels.compact .harness-label b,
+	.harness-labels.compact .harness-label span {
+		display: none;
+	}
+	.harness-labels.compact .harness-label::before {
+		content: attr(data-idx);
+		font-size: 0.65rem;
+		color: var(--fg);
+		background: var(--bg);
+		border: 1px solid var(--border);
+		padding: 0 0.3em;
 	}
 	.harness-label span {
 		display: block;

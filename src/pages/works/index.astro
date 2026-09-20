@@ -6,6 +6,7 @@ import Header from '../../components/Header.astro';
 import { SITE_TITLE } from '../../consts';
 
 const works = await getCollection('works');
+const isExternal = (url: string) => /^https?:\/\//.test(url);
 ---
 
 <!doctype html>
@@ -20,7 +21,11 @@ const works = await getCollection('works');
 				<article class="work">
 					<h2>
 						{work.data.url ? (
-							<a href={work.data.url} target="_blank" rel="noopener">{work.data.title}</a>
+							<a
+								href={work.data.url}
+								target={isExternal(work.data.url) ? '_blank' : undefined}
+								rel={isExternal(work.data.url) ? 'noopener' : undefined}
+							>{work.data.title}</a>
 						) : (
 							work.data.title
 						)}

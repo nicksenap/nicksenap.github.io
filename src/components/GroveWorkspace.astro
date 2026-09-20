@@ -1,0 +1,258 @@
+---
+const repos = [
+	{ name: 'web', state: 'M  src/auth.ts', changed: true },
+	{ name: 'api', state: 'clean', changed: false },
+	{ name: 'worker', state: 'M  jobs/session.go', changed: true },
+];
+---
+
+<figure class="workspace" aria-labelledby="workspace-caption">
+	<div class="command" aria-label="Terminal command">
+		<span class="prompt" aria-hidden="true">$</span>
+		<code>gw create -b feat/login -r web,api,worker</code>
+	</div>
+
+	<div class="flow" aria-hidden="true">
+		<div class="sources">
+			<span class="flow-label">main clones</span>
+			{repos.map((repo, index) => (
+				<div class="repo" style={`--i:${index}`}>
+					<span class="repo-mark">◇</span>
+					<span>{repo.name}</span>
+					<span class="branch">main</span>
+				</div>
+			))}
+		</div>
+
+		<div class="trunk">
+			<span class="node node-start"></span>
+			<span class="trunk-line"></span>
+			<span class="trunk-label">one command</span>
+			<span class="node node-end"></span>
+		</div>
+
+		<div class="grove">
+			<div class="grove-head">
+				<span class="flow-label">workspace</span>
+				<strong>feat-login/</strong>
+			</div>
+			{repos.map((repo, index) => (
+				<div class="worktree" style={`--i:${index}`}>
+					<span class="tree-mark">├─</span>
+					<span>{repo.name}/</span>
+					<span class="branch">feat/login</span>
+				</div>
+			))}
+		</div>
+	</div>
+
+	<div class="status" aria-label="Example output from gw status feat-login">
+		<div class="status-command"><span class="prompt" aria-hidden="true">$</span> <code>gw status feat-login</code></div>
+		<div class="status-row status-head"><span>repo</span><span>branch</span><span>status</span></div>
+		{repos.map((repo) => (
+			<div class="status-row">
+				<span>{repo.name}</span>
+				<span>feat/login</span>
+				<span class:list={{ changed: repo.changed }}>{repo.state}</span>
+			</div>
+		))}
+	</div>
+
+	<figcaption id="workspace-caption">
+		One workspace, one branch, every repository in view.
+	</figcaption>
+</figure>
+
+<style>
+	.workspace {
+		margin: 2.5rem 0 3rem;
+		box-shadow: var(--fg) 0 0 0 1px inset;
+		background: color-mix(in srgb, var(--bg) 88%, transparent);
+	}
+	.command,
+	.status-command {
+		display: flex;
+		gap: 1ch;
+		padding: 0.85rem 1rem;
+	}
+	.command {
+		box-shadow: var(--border) 0 -1px 0 0 inset;
+	}
+	.command code,
+	.status-command code {
+		padding: 0;
+		background: transparent;
+	}
+	.prompt {
+		color: var(--accent);
+	}
+	.flow {
+		display: grid;
+		grid-template-columns: 1fr 8rem 1fr;
+		align-items: center;
+		min-height: 19rem;
+		padding: 2rem 1.25rem;
+		box-shadow: var(--border) 0 -1px 0 0 inset;
+	}
+	.sources,
+	.grove {
+		display: grid;
+		gap: 0.65rem;
+	}
+	.flow-label {
+		color: var(--dim);
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+	.repo,
+	.worktree {
+		display: grid;
+		grid-template-columns: 2ch 1fr auto;
+		align-items: baseline;
+		gap: 0.75ch;
+		padding: 0.6rem 0.75rem;
+		box-shadow: var(--border) 0 0 0 1px inset;
+		animation: repo-in 0.5s calc(0.12s * var(--i)) both;
+	}
+	.repo-mark,
+	.tree-mark {
+		color: var(--accent);
+	}
+	.branch {
+		color: var(--dim);
+		font-size: 0.78rem;
+	}
+	.trunk {
+		position: relative;
+		height: 1px;
+		background: var(--border);
+		margin: 0 1.25rem;
+	}
+	.trunk-line {
+		position: absolute;
+		inset: 0;
+		background: var(--accent);
+		transform-origin: left;
+		animation: grow 0.9s 0.3s both;
+	}
+	.node {
+		position: absolute;
+		top: -3px;
+		width: 7px;
+		height: 7px;
+		background: var(--bg);
+		box-shadow: var(--accent) 0 0 0 1px inset;
+		z-index: 1;
+	}
+	.node-start { left: 0; }
+	.node-end { right: 0; }
+	.trunk-label {
+		position: absolute;
+		left: 50%;
+		top: 0.7rem;
+		transform: translateX(-50%);
+		color: var(--dim);
+		font-size: 0.68rem;
+		white-space: nowrap;
+	}
+	.grove {
+		padding: 1rem;
+		box-shadow:
+			var(--fg) 2px 0 0 0 inset,
+			var(--border) 0 0 0 1px inset;
+	}
+	.grove-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 1ch;
+		margin-bottom: 0.25rem;
+	}
+	.grove-head strong {
+		font-weight: 500;
+	}
+	.worktree {
+		padding: 0.4rem 0;
+		box-shadow: none;
+		animation-delay: calc(0.7s + 0.12s * var(--i));
+	}
+	.status {
+		padding-bottom: 0.85rem;
+	}
+	.status-command {
+		padding-bottom: 0.75rem;
+	}
+	.status-row {
+		display: grid;
+		grid-template-columns: 0.8fr 1fr 1.35fr;
+		gap: 1ch;
+		padding: 0.28rem 1rem;
+		font-size: 0.8rem;
+	}
+	.status-head {
+		color: var(--dim);
+		text-transform: uppercase;
+		font-size: 0.68rem;
+	}
+	.changed {
+		color: var(--accent);
+	}
+	figcaption {
+		padding: 0.7rem 1rem;
+		box-shadow: var(--border) 0 1px 0 0 inset;
+		color: var(--dim);
+		font-size: 0.72rem;
+	}
+	@keyframes grow {
+		from { transform: scaleX(0); }
+		to { transform: scaleX(1); }
+	}
+	@keyframes repo-in {
+		from { opacity: 0; transform: translateY(5px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+	@media (max-width: 600px) {
+		.command {
+			overflow-x: auto;
+			white-space: nowrap;
+		}
+		.flow {
+			grid-template-columns: 1fr;
+			gap: 1.25rem;
+			padding: 1.25rem 1rem;
+		}
+		.trunk {
+			width: 1px;
+			height: 3rem;
+			margin: 0 auto;
+		}
+		.trunk-line {
+			inset: 0;
+			transform-origin: top;
+			animation-name: grow-down;
+		}
+		.node-start { left: -3px; top: 0; }
+		.node-end { left: -3px; right: auto; top: auto; bottom: 0; }
+		.trunk-label {
+			left: 1rem;
+			top: 50%;
+			transform: translateY(-50%);
+		}
+		.status-row {
+			grid-template-columns: 0.65fr 1fr 1.35fr;
+			font-size: 0.68rem;
+		}
+	}
+	@keyframes grow-down {
+		from { transform: scaleY(0); }
+		to { transform: scaleY(1); }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.repo,
+		.worktree,
+		.trunk-line {
+			animation: none;
+		}
+	}
+</style>

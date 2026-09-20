@@ -1,0 +1,314 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import GroveWorkspace from '../components/GroveWorkspace.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
+
+const updated = new Date('2026-09-19');
+const updatedLabel = updated.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+const features = [
+	{
+		name: 'Create together',
+		command: 'gw create',
+		body: 'Open the same feature branch across an ad-hoc repo list or a saved preset. Per-repo setup runs as each worktree is made.',
+	},
+	{
+		name: 'See together',
+		command: 'gw status',
+		body: 'Read branch and working-tree state for the whole workspace in one table instead of visiting every checkout.',
+	},
+	{
+		name: 'Move together',
+		command: 'gw sync',
+		body: 'Rebase every repository onto its base branch, then reset or clean up the workspace as one unit.',
+	},
+	{
+		name: 'Extend at the edges',
+		command: 'gw plugin',
+		body: 'Add agent, terminal, and workflow integrations as standalone executables. Grove core stays a small, tool-agnostic worktree orchestrator.',
+	},
+];
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Grove — ${SITE_TITLE}`}
+			description="Grove gives separate repositories one shared worktree workflow: create, inspect, sync, and remove a feature workspace with gw."
+		/>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<header class="intro">
+				<div class="meta">
+					<h1>Grove</h1>
+					<time datetime={updated.toISOString().slice(0, 10)}>{updatedLabel}</time>
+				</div>
+				<p class="eyebrow">grove /ɡrōv/ noun — a small group of trees growing together.</p>
+				<p class="lede">
+					The multi-repo worktree workflow that monorepos get for free. One command gives every repository the
+					same branch, one directory to work from, and one view of what changed.
+				</p>
+				<div class="actions">
+					<a class="primary" href="https://github.com/nicksenap/grove" target="_blank" rel="noopener">View on GitHub ↗</a>
+					<a href="#install">Install <span aria-hidden="true">↓</span></a>
+				</div>
+			</header>
+
+			<GroveWorkspace />
+
+			<section class="problem" aria-labelledby="problem-title">
+				<p class="section-no">01 / Why</p>
+				<div>
+					<h2 id="problem-title">Separate repos should not mean separate work.</h2>
+					<p>
+						A feature crossing a web app, an API, and a worker means three worktree commands, three branch names
+						to keep aligned, and three places to inspect and eventually remove. Grove treats that set as one
+						workspace without asking you to turn it into a monorepo.
+					</p>
+				</div>
+			</section>
+
+			<section class="feature-section" aria-labelledby="features-title">
+				<div class="section-heading">
+					<p class="section-no">02 / Workflow</p>
+					<h2 id="features-title">One operation, every repository.</h2>
+				</div>
+				<ol class="features">
+					{features.map((feature, index) => (
+						<li>
+							<span class="idx">{String(index + 1).padStart(2, '0')}</span>
+							<div>
+								<div class="feature-head">
+									<h3>{feature.name}</h3>
+									<code>{feature.command}</code>
+								</div>
+								<p>{feature.body}</p>
+							</div>
+						</li>
+					))}
+				</ol>
+			</section>
+
+			<section class="install" id="install" aria-labelledby="install-title">
+				<div class="section-heading">
+					<p class="section-no">03 / Install</p>
+					<h2 id="install-title">A single static binary. Git is the only dependency.</h2>
+				</div>
+				<div class="install-grid">
+					<div>
+						<p class="method">Homebrew · macOS / Linux</p>
+						<pre><code>brew install nicksenap/grove/grove</code></pre>
+					</div>
+					<div>
+						<p class="method">Then add shell integration</p>
+						<pre><code>eval "$(gw shell-init)"</code></pre>
+					</div>
+				</div>
+				<div class="first-run">
+					<p class="method">Your first workspace</p>
+					<pre><code><span class="comment"># register the directory that holds your repos</span>
+gw init ~/dev
+
+<span class="comment"># create one feature across three of them</span>
+gw create -b feat/login -r web,api,worker
+
+<span class="comment"># see the whole change at once</span>
+gw status feat-login</code></pre>
+				</div>
+			</section>
+
+			<section class="closing" aria-labelledby="closing-title">
+				<p class="section-no">04 / Shape</p>
+				<div>
+					<h2 id="closing-title">Small core, open edges.</h2>
+					<p>
+						Lifecycle hooks prepare each checkout. Machine-readable output composes with shell pipelines. External
+						<code>gw-*</code> commands add integrations without coupling Grove to a particular editor, terminal, or
+						coding agent.
+					</p>
+					<p class="links">
+						<a href="https://github.com/nicksenap/grove#documentation" target="_blank" rel="noopener">Documentation ↗</a>
+						<a href="/thoughts/rewriting-grove-in-go">Why I rewrote it in Go →</a>
+					</p>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.intro {
+		margin-bottom: 1.5rem;
+	}
+	.meta {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 1ch;
+	}
+	.meta time,
+	.eyebrow,
+	.section-no,
+	.method {
+		color: var(--dim);
+		font-size: 0.85rem;
+	}
+	.eyebrow {
+		margin-bottom: 2rem;
+	}
+	.lede {
+		max-width: 62ch;
+		font-size: clamp(1.25rem, 4vw, 2rem);
+		line-height: 1.12;
+		letter-spacing: -0.035em;
+	}
+	.actions {
+		display: flex;
+		align-items: center;
+		gap: 1.5ch;
+		margin-top: 1.5rem;
+	}
+	.actions a {
+		padding: 0.55rem 0.75rem;
+		text-decoration: none;
+		box-shadow: var(--border) 0 0 0 1px inset;
+	}
+	.actions a:hover {
+		box-shadow: var(--fg) 0 0 0 1px inset;
+	}
+	.actions .primary {
+		background: var(--fg);
+		color: var(--bg);
+		box-shadow: none;
+	}
+	.problem,
+	.closing {
+		display: grid;
+		grid-template-columns: 8rem 1fr;
+		gap: 2rem;
+		padding: 2rem 0;
+		box-shadow: var(--fg) 0 1px 0 0 inset;
+	}
+	.problem h2,
+	.closing h2,
+	.section-heading h2 {
+		max-width: 32ch;
+	}
+	.problem p:not(.section-no),
+	.closing p:not(.section-no) {
+		max-width: 58ch;
+		color: color-mix(in srgb, var(--fg) 76%, transparent);
+	}
+	.feature-section,
+	.install {
+		padding: 2rem 0;
+		box-shadow: var(--fg) 0 1px 0 0 inset;
+	}
+	.section-heading {
+		display: grid;
+		grid-template-columns: 8rem 1fr;
+		gap: 2rem;
+		margin-bottom: 1.5rem;
+	}
+	.section-no {
+		margin: 0;
+		text-transform: uppercase;
+	}
+	.features {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.features li {
+		display: grid;
+		grid-template-columns: 3ch 1fr;
+		gap: 1ch;
+		padding: 1rem 0;
+		box-shadow: var(--border) 0 -1px 0 0 inset;
+	}
+	.features li:first-child {
+		box-shadow:
+			var(--border) 0 -1px 0 0 inset,
+			var(--border) 0 1px 0 0 inset;
+	}
+	.idx {
+		color: var(--dim);
+	}
+	.feature-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 1ch;
+	}
+	.feature-head h3 {
+		margin: 0 0 0.4rem;
+		text-transform: none;
+		font-weight: 700;
+	}
+	.feature-head code {
+		color: var(--dim);
+		font-size: 0.8rem;
+		white-space: nowrap;
+	}
+	.features p {
+		max-width: 60ch;
+		margin: 0;
+		color: color-mix(in srgb, var(--fg) 72%, transparent);
+	}
+	.install-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+	}
+	.method {
+		margin-bottom: 0.5rem;
+	}
+	.install pre {
+		margin: 0;
+		font-size: 0.85rem;
+	}
+	.first-run {
+		margin-top: 1.5rem;
+	}
+	.comment {
+		color: var(--dim);
+	}
+	.links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1.5ch;
+		margin-top: 1.5rem;
+	}
+	.closing {
+		padding-bottom: 0;
+	}
+	@media (max-width: 600px) {
+		.problem,
+		.closing,
+		.section-heading {
+			grid-template-columns: 1fr;
+			gap: 0.75rem;
+		}
+		.install-grid {
+			grid-template-columns: 1fr;
+		}
+		.feature-head {
+			align-items: flex-start;
+			flex-direction: column;
+			gap: 0;
+		}
+		.actions {
+			align-items: stretch;
+			flex-direction: column;
+		}
+		.actions a {
+			text-align: center;
+		}
+	}
+</style>

@@ -5,7 +5,7 @@ pubDate: 2026-07-10
 tags: ["aws", "observability", "otel", "typescript", "ai"]
 ---
 
-In [To the moon](/thoughts/to-the-moon) I mentioned, almost in passing, porting a service to a new language and new infrastructure in a single week. That service was a Python agent, rewritten in TypeScript, moved onto [Amazon Bedrock AgentCore](https://aws.amazon.com/bedrock/agentcore/). This is the bill for that week.
+Earlier this year I ported a service to a new language and new infrastructure in a single week. That service was a Python agent, rewritten in TypeScript, moved onto [Amazon Bedrock AgentCore](https://aws.amazon.com/bedrock/agentcore/). This is the bill for that week.
 
 The agent works fine. The problem is telemetry. I wanted AgentCore's managed **Evaluations** — Faithfulness, Correctness, tool-selection accuracy — to grade production traffic automatically. It produced exactly zero scores. The console said **"No events available."**
 

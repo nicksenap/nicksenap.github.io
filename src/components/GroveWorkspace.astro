@@ -15,8 +15,8 @@ const repos = [
 	<div class="flow" aria-hidden="true">
 		<div class="sources">
 			<span class="flow-label">main clones</span>
-			{repos.map((repo, index) => (
-				<div class="repo" style={`--i:${index}`}>
+			{repos.map((repo) => (
+				<div class="repo">
 					<span class="repo-mark">◇</span>
 					<span>{repo.name}</span>
 					<span class="branch">main</span>
@@ -36,8 +36,8 @@ const repos = [
 				<span class="flow-label">workspace</span>
 				<strong>feat-login/</strong>
 			</div>
-			{repos.map((repo, index) => (
-				<div class="worktree" style={`--i:${index}`}>
+			{repos.map((repo) => (
+				<div class="worktree">
 					<span class="tree-mark">├─</span>
 					<span>{repo.name}/</span>
 					<span class="branch">feat/login</span>
@@ -113,7 +113,6 @@ const repos = [
 		gap: 0.75ch;
 		padding: 0.6rem 0.75rem;
 		box-shadow: var(--border) 0 0 0 1px inset;
-		animation: repo-in 0.5s calc(0.12s * var(--i)) both;
 	}
 	.repo-mark,
 	.tree-mark {
@@ -133,8 +132,6 @@ const repos = [
 		position: absolute;
 		inset: 0;
 		background: var(--accent);
-		transform-origin: left;
-		animation: grow 0.9s 0.3s both;
 	}
 	.node {
 		position: absolute;
@@ -175,7 +172,6 @@ const repos = [
 	.worktree {
 		padding: 0.4rem 0;
 		box-shadow: none;
-		animation-delay: calc(0.7s + 0.12s * var(--i));
 	}
 	.status {
 		padding-bottom: 0.85rem;
@@ -204,14 +200,6 @@ const repos = [
 		color: var(--dim);
 		font-size: 0.72rem;
 	}
-	@keyframes grow {
-		from { transform: scaleX(0); }
-		to { transform: scaleX(1); }
-	}
-	@keyframes repo-in {
-		from { opacity: 0; transform: translateY(5px); }
-		to { opacity: 1; transform: translateY(0); }
-	}
 	@media (max-width: 600px) {
 		.command {
 			overflow-x: auto;
@@ -227,11 +215,6 @@ const repos = [
 			height: 3rem;
 			margin: 0 auto;
 		}
-		.trunk-line {
-			inset: 0;
-			transform-origin: top;
-			animation-name: grow-down;
-		}
 		.node-start { left: -3px; top: 0; }
 		.node-end { left: -3px; right: auto; top: auto; bottom: 0; }
 		.trunk-label {
@@ -242,17 +225,6 @@ const repos = [
 		.status-row {
 			grid-template-columns: 0.65fr 1fr 1.35fr;
 			font-size: 0.68rem;
-		}
-	}
-	@keyframes grow-down {
-		from { transform: scaleY(0); }
-		to { transform: scaleY(1); }
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.repo,
-		.worktree,
-		.trunk-line {
-			animation: none;
 		}
 	}
 </style>

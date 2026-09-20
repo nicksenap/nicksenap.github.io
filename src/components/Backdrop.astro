@@ -234,11 +234,18 @@ void main() {
 
 		// Raymarching is per-pixel work: render small and let the browser upscale.
 		const SCALE = 0.4;
+		let ready = false;
 		function resize() {
 			const dpr = Math.min(devicePixelRatio || 1, 2) * SCALE;
-			canvas.width = Math.round(innerWidth * dpr);
-			canvas.height = Math.round(innerHeight * dpr);
-			gl.viewport(0, 0, canvas.width, canvas.height);
+			const w = Math.round(innerWidth * dpr);
+			const h = Math.round(innerHeight * dpr);
+			if (w === canvas.width && h === canvas.height) return;
+			// Setting the size clears the buffer to black; redraw in the same task so that frame is
+			// never painted (otherwise the page flashes until the next 30 fps tick).
+			canvas.width = w;
+			canvas.height = h;
+			gl.viewport(0, 0, w, h);
+			if (ready && active()) draw();
 		}
 		resize();
 		addEventListener('resize', resize);
@@ -263,6 +270,7 @@ void main() {
 			draw();
 		}
 		const active = () => !root.classList.contains('no-fx') && !document.hidden;
+		ready = true;
 		function sync() {
 			cancelAnimationFrame(raf);
 			if (!active()) return;

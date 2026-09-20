@@ -61,6 +61,7 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 	max-width: var(--content-width);
 	min-height: 100vh;
+	min-height: 100dvh; /* iOS: 100vh is the toolbar-collapsed height, so short pages over-scroll */
 	display: flex;
 	flex-direction: column;
 }

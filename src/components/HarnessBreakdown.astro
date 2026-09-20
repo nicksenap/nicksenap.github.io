@@ -333,9 +333,9 @@
 			const cssHeight = canvas.getBoundingClientRect().height;
 			const compact = cssWidth < 520;
 			// compact: portrait canvas, fit the exploded stack by height as well as width
-			illo.zoom = compact ? Math.min(cssWidth / 400, cssHeight / 640) : cssWidth / 700;
+			illo.zoom = compact ? Math.min(cssWidth / 400, cssHeight / 720) : cssWidth / 700;
 			illo.translate.x = compact ? 0 : -70;
-			illo.translate.y = compact ? 40 + 10 * e : 20 + 30 * e;
+			illo.translate.y = compact ? 40 + 55 * e : 20 + 30 * e;
 			illo.updateRenderGraph();
 
 			// ---- labels: project, then push apart vertically ----

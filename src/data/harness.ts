@@ -31,7 +31,7 @@ export const HARNESS_PARTS: HarnessPart[] = [
 		part: 'SoC',
 		role: 'coding agent',
 		blurb: 'Small core, any model, and every part of it is a TypeScript extension I can read rather than a product I configure.',
-		url: 'https://github.com/earendil-works/pi-coding-agent',
+		url: 'https://github.com/earendil-works/pi',
 	},
 	{
 		id: 'brain',

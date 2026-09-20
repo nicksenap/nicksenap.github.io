@@ -1,0 +1,505 @@
+---
+/**
+ * Grove as a gantry: three linear rails (repos) and one carriage (workspace) that rides them in lockstep.
+ * Scroll drives the workflow: create lowers the carriage, status lights the indicators,
+ * sync turns the lead screws and moves the carriage, delete lifts it off. Drag to rotate.
+ */
+---
+
+<div class="gantry-scroll" data-gantry>
+	<figure class="gantry">
+		<canvas class="gantry-canvas" width="720" height="620"></canvas>
+		<div class="gantry-labels"></div>
+		<figcaption>
+			<p class="gantry-cmd"><span class="ps">$</span> <span class="typed"></span><span class="caret"></span></p>
+			<div class="gantry-row">
+				<span class="gantry-hint">scroll ↓</span>
+				<span class="gantry-stages" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="workflow">
+					<span class="track"><i></i></span>
+					<span class="names"><span>create</span><span>status</span><span>sync</span><span>delete</span></span>
+				</span>
+				<span class="gantry-hint gantry-hint-drag">drag to rotate</span>
+			</div>
+		</figcaption>
+	</figure>
+</div>
+
+<script>
+	import Zdog from 'zdog';
+	import { GROVE_PARTS } from '../data/grove';
+
+	const TAU = Zdog.TAU;
+	type Tier = 'fg' | 'dim' | 'accent';
+	type Group = 'static' | 'carriage' | 'indicator';
+	type Colors = Record<Tier, string>;
+	type Painted = { item: any; tier: Tier; group: Group };
+
+	const clamp = (v: number) => Math.min(1, Math.max(0, v));
+	const smooth = (v: number) => v * v * (3 - 2 * v);
+	const seg = (t: number, a: number, b: number) => smooth(clamp((t - a) / (b - a)));
+	function rgba(hex: string, a: number) {
+		const h = hex.replace('#', '');
+		const n = parseInt(h.length === 3 ? h.split('').map((ch) => ch + ch).join('') : h, 16);
+		return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a.toFixed(3)})`;
+	}
+
+	// rails run along z (back → front). x left → right, y down.
+	const RAILS = [
+		{ id: 'web', x: -110, len: 270 },
+		{ id: 'api', x: 0, len: 230 },
+		{ id: 'worker', x: 110, len: 250 },
+	];
+	const RAIL_W = 16;
+	const RAIL_H = 10;
+	const BLOCK_H = 14;
+	const BAR_Y = -RAIL_H - BLOCK_H - 6; // crossbar centre when seated
+	const LIFT = 130;
+
+	const STAGES = [
+		{ id: 'create', cmd: 'gw create -b feat/login -r web,api,worker', from: 0, to: 0.34 },
+		{ id: 'status', cmd: 'gw status feat-login', from: 0.34, to: 0.5 },
+		{ id: 'sync', cmd: 'gw sync feat-login', from: 0.5, to: 0.78 },
+		{ id: 'delete', cmd: 'gw delete feat-login', from: 0.78, to: 1 },
+	];
+
+	function init(root: HTMLElement) {
+		const canvas = root.querySelector('canvas') as HTMLCanvasElement;
+		const labelsEl = root.querySelector('.gantry-labels') as HTMLElement;
+		const figure = root.querySelector('.gantry') as HTMLElement;
+		const typedEl = root.querySelector('.typed') as HTMLElement;
+		const hint = root.querySelector('.gantry-hint') as HTMLElement;
+		const stagesEl = root.querySelector('.gantry-stages') as HTMLElement;
+		const fill = root.querySelector('.track i') as HTMLElement;
+		const names = [...root.querySelectorAll<HTMLElement>('.names span')];
+
+		const readColors = (): Colors => {
+			const css = getComputedStyle(document.documentElement);
+			return {
+				fg: css.getPropertyValue('--fg').trim() || '#ffffff',
+				dim: css.getPropertyValue('--border').trim() || '#3d3d3d',
+				accent: css.getPropertyValue('--accent').trim() || '#ef6300',
+			};
+		};
+		let live = readColors();
+		new MutationObserver(() => (live = readColors())).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+		const touch = matchMedia('(pointer: coarse)').matches;
+		root.classList.toggle('gantry-touch', touch);
+		const illo = new Zdog.Illustration({
+			element: canvas,
+			dragRotate: !touch,
+			rotate: { x: -TAU / 11, y: TAU / 9 },
+			resize: true,
+		});
+
+		// ---- paint registry: every item carries a colour tier and a fade group ----
+		const painted: Painted[] = [];
+		const reg = <T,>(item: T, tier: Tier, group: Group = 'static'): T => {
+			painted.push({ item, tier, group });
+			return item;
+		};
+		const wire = (stroke = 1.5) => ({ stroke, color: '#000', fill: false });
+		function paintTree(item: any, color: string) {
+			if (typeof item.color === 'string') item.color = color;
+			if (typeof item.backface === 'string') item.backface = color;
+			item.children?.forEach((ch: any) => paintTree(ch, color));
+		}
+
+		// ---- base plate ----
+		const PW = 380;
+		const PD = 330;
+		reg(new Zdog.Rect({ addTo: illo, width: PW, height: PD, rotate: { x: TAU / 4 }, translate: { y: 3 }, ...wire(1) }), 'dim');
+		reg(new Zdog.Rect({ addTo: illo, width: PW, height: PD, rotate: { x: TAU / 4 }, translate: { y: 9 }, ...wire(1) }), 'dim');
+		for (const [x, z] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+			reg(new Zdog.Shape({ addTo: illo, path: [{ x: x * PW / 2, y: 3, z: z * PD / 2 }, { x: x * PW / 2, y: 9, z: z * PD / 2 }], ...wire(1) }), 'dim');
+			reg(new Zdog.Ellipse({ addTo: illo, diameter: 9, rotate: { x: TAU / 4 }, translate: { x: x * (PW / 2 - 16), y: 2.5, z: z * (PD / 2 - 16) }, ...wire(1) }), 'dim');
+		}
+		// slots between the rails
+		for (const x of [-55, 55]) {
+			reg(new Zdog.Rect({ addTo: illo, width: 8, height: 200, rotate: { x: TAU / 4 }, translate: { x, y: 2.5 }, ...wire(1) }), 'dim');
+		}
+
+		// ---- rails, end stops, lead screws ----
+		type Rail = (typeof RAILS)[number] & { screwSpin: Zdog.Anchor; back: Zdog.Anchor; frontStop: Zdog.Anchor; screwMid: Zdog.Anchor };
+		const rails: Rail[] = RAILS.map((r) => {
+			const yTop = -RAIL_H;
+			// T-slot profile: outer box + the slot channel on top
+			reg(new Zdog.Box({ addTo: illo, width: RAIL_W, height: RAIL_H, depth: r.len, translate: { x: r.x, y: -RAIL_H / 2 }, ...wire(1.5) }), 'fg');
+			for (const dx of [-3.5, 3.5]) {
+				reg(new Zdog.Shape({ addTo: illo, path: [{ x: r.x + dx, y: yTop, z: -r.len / 2 }, { x: r.x + dx, y: yTop, z: r.len / 2 }], ...wire(1) }), 'dim');
+			}
+			// mounting bolts along the rail
+			for (let z = -r.len / 2 + 22; z < r.len / 2 - 10; z += 44) {
+				reg(new Zdog.Ellipse({ addTo: illo, diameter: 4, rotate: { x: TAU / 4 }, translate: { x: r.x, y: yTop - 0.5, z }, ...wire(1) }), 'dim');
+			}
+			// end stops
+			const stopAt = (z: number) => {
+				const a = new Zdog.Anchor({ addTo: illo, translate: { x: r.x, y: yTop - 5, z } });
+				reg(new Zdog.Box({ addTo: a, width: RAIL_W + 6, height: 10, depth: 6, ...wire(1) }), 'fg');
+				reg(new Zdog.Shape({ addTo: a, translate: { y: -1, z: z > 0 ? 3.5 : -3.5 }, stroke: 3, color: '#000' }), 'dim');
+				return a;
+			};
+			stopAt(-r.len / 2 + 3);
+			const frontStop = stopAt(r.len / 2 - 3);
+			// lead screw beside the rail, with helical hatching that spins
+			const sx = r.x + RAIL_W / 2 + 8;
+			const screw = new Zdog.Anchor({ addTo: illo, translate: { x: sx, y: -5 } });
+			reg(new Zdog.Cylinder({ addTo: screw, diameter: 5, length: r.len - 24, ...wire(1) }), 'dim');
+			const screwSpin = new Zdog.Anchor({ addTo: screw });
+			for (let z = -r.len / 2 + 16; z < r.len / 2 - 14; z += 7) {
+				reg(new Zdog.Shape({ addTo: screwSpin, path: [{ x: -3, y: 0 }, { x: 3, y: 0 }], translate: { z }, rotate: { z: z * 0.45 }, ...wire(1) }), 'dim');
+			}
+			// bearing pillow at each end of the screw
+			for (const z of [-r.len / 2 + 10, r.len / 2 - 10]) {
+				reg(new Zdog.Box({ addTo: screw, width: 10, height: 12, depth: 6, translate: { y: 2, z }, ...wire(1) }), 'dim');
+			}
+			const back = new Zdog.Anchor({ addTo: illo, translate: { x: r.x, y: yTop, z: -r.len / 2 } });
+			const screwMid = new Zdog.Anchor({ addTo: screw, translate: { z: 20 } });
+			return { ...r, screwSpin, back, frontStop, screwMid };
+		});
+
+		// ---- carriage: crossbar + a bearing block on each rail + connector ----
+		const carriage = new Zdog.Anchor({ addTo: illo, translate: { y: BAR_Y } });
+		const BAR_W = 300;
+		reg(new Zdog.Box({ addTo: carriage, width: BAR_W, height: 12, depth: 26, ...wire(1.5) }), 'fg', 'carriage');
+		// lightening slots along the bar
+		for (const x of [-100, -50, 50, 100]) {
+			reg(new Zdog.Rect({ addTo: carriage, width: 28, height: 10, rotate: { x: TAU / 4 }, translate: { x, y: -6.5 }, ...wire(1) }), 'dim', 'carriage');
+		}
+		const blocks = RAILS.map((r) => {
+			const b = new Zdog.Anchor({ addTo: carriage, translate: { x: r.x, y: 6 + BLOCK_H / 2 } });
+			reg(new Zdog.Box({ addTo: b, width: RAIL_W + 12, height: BLOCK_H, depth: 36, ...wire(1.5) }), 'fg', 'carriage');
+			for (const [dx, dz] of [[-9, -12], [9, -12], [-9, 12], [9, 12]]) {
+				reg(new Zdog.Ellipse({ addTo: b, diameter: 4, rotate: { x: TAU / 4 }, translate: { x: dx, y: -BLOCK_H / 2 - 0.5, z: dz }, ...wire(1) }), 'dim', 'carriage');
+			}
+			// nut that grips the lead screw
+			reg(new Zdog.Box({ addTo: b, width: 12, height: 10, depth: 14, translate: { x: RAIL_W / 2 + 8, y: 3 }, ...wire(1) }), 'dim', 'carriage');
+			// indicator on top of the block
+			const ind = reg(new Zdog.Rect({ addTo: b, width: 6, height: 6, rotate: { x: TAU / 4 }, translate: { y: -BLOCK_H / 2 - 1, z: 8 }, stroke: 1.5, color: '#000', fill: true }), 'accent', 'indicator');
+			return { anchor: b, ind, id: r.id };
+		});
+		// ribbon connector on the bar (grove is the camera port on the harness board)
+		const connector = new Zdog.Anchor({ addTo: carriage, translate: { x: 60, y: -6 } });
+		reg(new Zdog.Box({ addTo: connector, width: 10, height: 8, depth: 22, translate: { y: -4 }, ...wire(1) }), 'fg', 'carriage');
+		reg(new Zdog.Rect({ addTo: connector, width: 4, height: 18, translate: { y: -14 }, ...wire(1) }), 'dim', 'carriage');
+		// dimension line over the bar
+		reg(new Zdog.Shape({ addTo: carriage, path: [{ x: -BAR_W / 2 }, { x: BAR_W / 2 }], translate: { y: -26 }, ...wire(1) }), 'dim', 'carriage');
+		for (const x of [-BAR_W / 2, BAR_W / 2]) {
+			reg(new Zdog.Shape({ addTo: carriage, path: [{ x, y: -30 }, { x, y: -22 }], ...wire(1) }), 'dim', 'carriage');
+		}
+		const barEnd = new Zdog.Anchor({ addTo: carriage, translate: { x: BAR_W / 2 } });
+
+		// ---- labels (HTML), each pinned to an anchor ----
+		type Label = { el: HTMLElement; anchor: Zdog.Anchor; group: Group; px: number; py: number; ly: number };
+		const anchorFor: Record<string, Zdog.Anchor> = {
+			connector,
+			carriage: barEnd,
+			indicator: blocks[0].ind as unknown as Zdog.Anchor,
+			block: blocks[2].anchor,
+			screw: rails[1].screwMid,
+			rail: rails[2].back,
+			stop: rails[0].frontStop,
+			plate: new Zdog.Anchor({ addTo: illo, translate: { x: PW / 2 - 16, y: 3, z: PD / 2 - 16 } }),
+		};
+		const groupFor: Record<string, Group> = { connector: 'carriage', carriage: 'carriage', indicator: 'indicator', block: 'carriage' };
+		const labels: Label[] = GROVE_PARTS.map((p, i) => {
+			const el = document.createElement('div');
+			el.className = 'gantry-label';
+			el.innerHTML = `<b>${p.name}</b><span>${p.role} · the ${p.part}</span>`;
+			el.dataset.idx = String(i + 1).padStart(2, '0');
+			labelsEl.appendChild(el);
+			return { el, anchor: anchorFor[p.id], group: groupFor[p.id] ?? 'static', px: 0, py: 0, ly: 0 };
+		});
+
+		// ---- scroll → target progress ----
+		let target = 0;
+		let progress = 0;
+		function computeTarget() {
+			const r = root.getBoundingClientRect();
+			const travel = r.height - figure.offsetHeight;
+			const pinTop = (window.innerHeight - figure.offsetHeight) / 2;
+			figure.style.top = `${pinTop}px`;
+			target = clamp((pinTop - r.top) / travel);
+		}
+		window.addEventListener('scroll', computeTarget, { passive: true });
+		window.addEventListener('resize', computeTarget);
+		computeTarget();
+
+		const baseY = illo.rotate.y;
+		let spin = 0;
+		let lastPct = -1;
+		let lastCmd = '';
+
+		function frame() {
+			progress += (target - progress) * 0.1;
+			const e = progress;
+
+			// stage values
+			const lower = seg(e, 0.1, 0.32);
+			const raise = seg(e, 0.82, 0.98);
+			const carriageA = seg(e, 0.04, 0.16) * (1 - seg(e, 0.93, 1));
+			const indA = seg(e, 0.36, 0.46) * (1 - seg(e, 0.8, 0.88));
+			const travel = seg(e, 0.52, 0.76);
+			const staticA = 0.35 + 0.65 * seg(e, 0, 0.1);
+
+			carriage.translate.y = BAR_Y - LIFT * (1 - lower) - LIFT * raise;
+			carriage.translate.z = 55 - 110 * travel;
+			for (const r of rails) r.screwSpin.rotate.z = travel * TAU * 2.5;
+
+			const alpha: Record<Group, number> = { static: staticA, carriage: carriageA, indicator: indA * carriageA };
+			for (const p of painted) {
+				const a = p.group === 'indicator' ? alpha.indicator : alpha[p.group];
+				paintTree(p.item, rgba(live[p.tier], p.tier === 'dim' ? a * 0.9 : a));
+			}
+			// only two of the three worktrees are dirty
+			paintTree(blocks[1].ind, rgba(live.accent, 0));
+
+			spin += 0.002;
+			if (!(illo as any).isDragging) illo.rotate.y = baseY + Math.sin(spin) * 0.18;
+			const rect = canvas.getBoundingClientRect();
+			const compact = rect.width < 520;
+			illo.zoom = compact ? Math.min(rect.width / 400, rect.height / 640) : rect.width / 560;
+			illo.translate.x = compact ? 0 : -60;
+			illo.translate.y = compact ? 10 : 50;
+			illo.updateRenderGraph();
+
+			// ---- caption ----
+			hint.style.opacity = String(1 - Math.min(1, e * 6));
+			const fr = figure.getBoundingClientRect();
+			document.documentElement.classList.toggle('backdrop-quiet', progress > 0.03 && fr.bottom > 0 && fr.top < innerHeight);
+			const pct = Math.round(progress * 100);
+			if (pct !== lastPct) {
+				lastPct = pct;
+				fill.style.transform = `scaleX(${progress})`;
+				stagesEl.setAttribute('aria-valuenow', String(pct));
+			}
+			const stage = STAGES.find((s) => e < s.to) ?? STAGES[STAGES.length - 1];
+			const si = STAGES.indexOf(stage);
+			const local = clamp((e - stage.from) / (stage.to - stage.from));
+			const typedLen = Math.floor(clamp(local / 0.35) * stage.cmd.length);
+			// hold the previous command on screen until the next one starts typing
+			const shown = e < 0.02 ? '' : typedLen === 0 && si > 0 ? STAGES[si - 1].cmd : stage.cmd.slice(0, typedLen);
+			if (shown !== lastCmd) {
+				lastCmd = shown;
+				typedEl.textContent = shown;
+			}
+			names.forEach((n, i) => n.classList.toggle('on', STAGES[i] === stage && e > 0.02));
+
+			// ---- labels: project, push apart, leader lines ----
+			labelsEl.classList.toggle('compact', compact);
+			const labelA = seg(e, 0.02, 0.14);
+			for (const l of labels) {
+				const o = l.anchor.renderOrigin;
+				l.px = rect.width / 2 + o.x * illo.zoom;
+				l.py = rect.height / 2 + o.y * illo.zoom;
+				l.ly = l.py;
+			}
+			const vis = (l: Label) => labelA * (l.group === 'static' ? 1 : l.group === 'indicator' ? alpha.indicator : carriageA);
+			if (compact) {
+				for (const l of labels) {
+					l.el.style.transform = `translate(${l.px + 6}px, ${l.py - 8}px)`;
+					l.el.style.opacity = String(vis(l));
+				}
+				requestAnimationFrame(frame);
+				return;
+			}
+			const sorted = [...labels].sort((a, b) => a.py - b.py);
+			const minGap = 32;
+			for (let i = 1; i < sorted.length; i++) {
+				if (sorted[i].ly - sorted[i - 1].ly < minGap) sorted[i].ly = sorted[i - 1].ly + minGap;
+			}
+			const drift = (sorted[sorted.length - 1].ly - sorted[sorted.length - 1].py) / 2;
+			for (const l of labels) l.ly -= drift;
+
+			const labelX = rect.width * 0.74;
+			const scale = rect.width / canvas.width;
+			const ctx = illo.ctx;
+			ctx.save();
+			ctx.scale(1 / scale, 1 / scale);
+			ctx.setLineDash([2, 3]);
+			ctx.lineWidth = 1;
+			ctx.strokeStyle = live.dim;
+			for (const l of labels) {
+				const a = vis(l);
+				l.el.style.transform = `translate(${labelX + 10}px, ${l.ly}px)`;
+				l.el.style.opacity = String(a);
+				if (a <= 0.01) continue;
+				ctx.globalAlpha = a;
+				ctx.beginPath();
+				ctx.moveTo(l.px, l.py);
+				ctx.lineTo(labelX - 6, l.ly);
+				ctx.lineTo(labelX + 4, l.ly);
+				ctx.stroke();
+			}
+			ctx.restore();
+			requestAnimationFrame(frame);
+		}
+		frame();
+	}
+
+	document.querySelectorAll<HTMLElement>('[data-gantry]').forEach(init);
+</script>
+
+<style is:global>
+	.gantry-scroll {
+		height: 300vh;
+		margin: 0;
+	}
+	.gantry {
+		position: sticky;
+		top: 0;
+		margin: 0 auto;
+		width: min(100%, 78vh);
+		user-select: none;
+	}
+	.gantry-canvas {
+		display: block;
+		width: 100%;
+		aspect-ratio: 720 / 620;
+		height: auto;
+		cursor: grab;
+	}
+	.gantry-canvas:active {
+		cursor: grabbing;
+	}
+	.gantry-touch .gantry-canvas {
+		cursor: default;
+	}
+	.gantry-touch .gantry-hint-drag {
+		visibility: hidden;
+	}
+	@media (max-width: 560px) {
+		.gantry {
+			width: 100%;
+		}
+		.gantry-canvas {
+			aspect-ratio: auto;
+			height: min(64vh, 520px);
+		}
+	}
+	.gantry-labels {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+	.gantry-label {
+		position: absolute;
+		top: 0;
+		left: 0;
+		transform: translate(-1000px, -1000px);
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		line-height: 1.2;
+		color: var(--fg);
+		white-space: nowrap;
+		margin-top: -1.2em;
+		opacity: 0;
+	}
+	.gantry-label b {
+		display: block;
+		font-weight: 600;
+	}
+	.gantry-label span {
+		display: block;
+		color: var(--dim);
+	}
+	.gantry-labels.compact .gantry-label b,
+	.gantry-labels.compact .gantry-label span {
+		display: none;
+	}
+	.gantry-labels.compact .gantry-label::before {
+		content: attr(data-idx);
+		font-size: 0.65rem;
+		color: var(--fg);
+		background: var(--bg);
+		border: 1px solid var(--border);
+		padding: 0 0.3em;
+	}
+	.gantry figcaption {
+		display: grid;
+		gap: 0.5rem;
+		margin-top: 0.25rem;
+		font-size: 0.75rem;
+		color: var(--dim);
+		pointer-events: none;
+	}
+	.gantry-cmd {
+		margin: 0;
+		color: var(--fg);
+		min-height: 1.25em;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.gantry-cmd .ps {
+		color: var(--accent);
+	}
+	.gantry-cmd .caret {
+		display: inline-block;
+		width: 0.6ch;
+		height: 1em;
+		vertical-align: -0.15em;
+		background: var(--fg);
+		animation: gantry-blink 1s steps(2) infinite;
+	}
+	.gantry-row {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		align-items: start;
+		gap: 2ch;
+	}
+	.gantry-hint {
+		transition: opacity 0.2s;
+	}
+	.gantry-hint-drag {
+		text-align: right;
+		opacity: 1 !important;
+	}
+	.gantry-stages {
+		display: grid;
+		gap: 0.3rem;
+		width: 32ch;
+	}
+	.gantry-stages .track {
+		position: relative;
+		height: 1px;
+		background: var(--border);
+	}
+	.gantry-stages .track i {
+		position: absolute;
+		inset: -1px 0;
+		background: var(--fg);
+		transform-origin: left;
+		transform: scaleX(0);
+	}
+	.gantry-stages .names {
+		display: flex;
+		justify-content: space-between;
+	}
+	.gantry-stages .names span {
+		transition: color 0.2s;
+	}
+	.gantry-stages .names span.on {
+		color: var(--fg);
+	}
+	@keyframes gantry-blink {
+		to { visibility: hidden; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.gantry-cmd .caret {
+			animation: none;
+		}
+	}
+	@media (max-width: 519px) {
+		.gantry-row {
+			grid-template-columns: 1fr;
+			justify-items: center;
+		}
+		.gantry-hint {
+			display: none;
+		}
+		.gantry-stages {
+			width: 100%;
+		}
+	}
+</style>

@@ -1,36 +1,14 @@
 ---
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
-import GroveScene from '../components/GroveScene.astro';
+import GroveGantry from '../components/GroveGantry.astro';
 import Header from '../components/Header.astro';
 import { SITE_TITLE } from '../consts';
+import { GROVE_PARTS } from '../data/grove';
 
 const updated = new Date('2026-09-19');
 const updatedLabel = updated.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 const version = 'v1.1.18';
-
-const commands = [
-	{
-		name: 'gw create',
-		role: 'one branch, every repo',
-		blurb: 'Names the branch, takes a repo list or a saved preset, and adds a worktree for each. A .grove.toml in the repo picks the base branch and runs setup once the checkout exists.',
-	},
-	{
-		name: 'gw status',
-		role: 'one table',
-		blurb: 'Branch and working-tree state for the whole workspace in one table, so I stop visiting three directories to find out where I left off.',
-	},
-	{
-		name: 'gw sync · reset · delete',
-		role: 'the workspace as a unit',
-		blurb: 'Rebase every repo onto its base branch, put every repo back on the workspace branch, or remove worktrees, branches and records together when the feature is merged.',
-	},
-	{
-		name: 'gw plugin',
-		role: 'gw-* on PATH',
-		blurb: 'Anything not in core is a separate executable, git-style. Agent, terminal and recipe integrations live there so the core stays a plain worktree tool.',
-	},
-];
 ---
 
 <!doctype html>
@@ -38,7 +16,7 @@ const commands = [
 	<head>
 		<BaseHead
 			title={`Grove — ${SITE_TITLE}`}
-			description="Grove (gw): one feature branch across several repositories, created, inspected, synced and removed as one workspace."
+			description="Grove (gw): one feature branch across several repositories, drawn as a gantry riding parallel rails. Create, inspect, sync and remove a workspace as one unit."
 		/>
 	</head>
 	<body>
@@ -47,14 +25,32 @@ const commands = [
 			<header class="intro">
 				<div class="meta"><h1>Grove</h1><time datetime={updated.toISOString().slice(0, 10)}>{updatedLabel}</time></div>
 				<p class="lede">
-					A CLI I wrote for working across several repos at once. One command puts every repo on the same
-					branch in one directory; the rest of the commands treat that directory as the unit. Code on
+					A CLI I wrote for working across several repos at once, drawn as a gantry: each repo is a rail, the
+					workspace is the carriage that rides all of them together. Scroll to run it. Code on
 					<a href="https://github.com/nicksenap/grove" target="_blank" rel="noopener">GitHub</a>, docs in the
 					<a href="https://github.com/nicksenap/grove#documentation" target="_blank" rel="noopener">README</a>.
 				</p>
 			</header>
 
-			<GroveScene />
+			<GroveGantry />
+
+			<section class="bom" aria-labelledby="parts-title">
+				<h2 id="parts-title">Parts</h2>
+				<ol class="parts">
+					{GROVE_PARTS.map((p, i) => (
+						<li class="part" id={`part-${p.id}`}>
+							<span class="idx">{String(i + 1).padStart(2, '0')}</span>
+							<div class="body">
+								<div class="head">
+									<span class="name">{p.name}</span>
+									<span class="slot">{p.role} · the {p.part}</span>
+								</div>
+								<p class="blurb">{p.blurb}</p>
+							</div>
+						</li>
+					))}
+				</ol>
+			</section>
 
 			<section aria-labelledby="why-title">
 				<h2 id="why-title">Why</h2>
@@ -62,27 +58,9 @@ const commands = [
 					Monorepos get cross-project work for free. Most of what I touch is not a monorepo: separate repos,
 					separate CI, separate deploys. A feature across a web app, an API and a worker meant
 					<code>git worktree add</code> three times, three branch names to keep aligned, three places to check
-					and three to clean up. Grove is that set of chores collapsed into one workspace, without moving
+					and three to clean up. Grove is that set of chores collapsed into one carriage, without moving
 					anything into a monorepo.
 				</p>
-			</section>
-
-			<section class="bom" aria-labelledby="commands-title">
-				<h2 id="commands-title">Commands</h2>
-				<ol class="parts">
-					{commands.map((c, i) => (
-						<li class="part">
-							<span class="idx">{String(i + 1).padStart(2, '0')}</span>
-							<div class="body">
-								<div class="head">
-									<span class="name">{c.name}</span>
-									<span class="slot">{c.role}</span>
-								</div>
-								<p class="blurb">{c.blurb}</p>
-							</div>
-						</li>
-					))}
-				</ol>
 			</section>
 
 			<section aria-labelledby="install-title">
@@ -101,9 +79,10 @@ gw status feat-login</code></pre>
 			</section>
 
 			<p class="colophon">
-				<em>grove</em>, noun: a small group of trees growing together. Drawn in code with <a href="https://zzz.dog" target="_blank" rel="noopener">Zdog</a>, one trunk per repo. Started in Python, <a href="/thoughts/rewriting-grove-in-go">rewritten in Go</a>
-				for startup time and a one-file install. This page describes {version}; the date above is the last time it
-				matched the tool.
+				<em>grove</em>, noun: a small group of trees growing together. Drawn in code with
+				<a href="https://zzz.dog" target="_blank" rel="noopener">Zdog</a>, as a three-rail linear gantry. Started in Python,
+				<a href="/thoughts/rewriting-grove-in-go">rewritten in Go</a> for startup time and a one-file install. This
+				page describes {version}; the date above is the last time it matched the tool.
 			</p>
 		</main>
 		<Footer />

@@ -1,9 +1,19 @@
 /* Terminal aesthetic inspired by sacred.computer (SRCL) */
 
-@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;700&family=Noto+Serif+TC:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;700&display=swap');
+
+/* Header only. Departure Mono (SIL OFL) is a pixel font: crispest at multiples of 11px (5.5px on 2x). */
+@font-face {
+	font-family: 'Departure Mono';
+	src: url('/fonts/DepartureMono-Regular.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
 
 :root {
 	--font-mono: 'Geist Mono', Consolas, monaco, monospace;
+	--font-display: 'Departure Mono', var(--font-mono); /* header only */
 	--bg: #161616;
 	--fg: #ffffff;
 	--border: #3d3d3d;

@@ -7,7 +7,7 @@ import HeaderLink from './HeaderLink.astro';
 
 <header>
 	<nav>
-		<a href="/" class="site-title">「斷章取義」</a>
+		<a href="/" class="site-title">out of context</a>
 		<div class="nav-right">
 			<div class="nav-links">
 				<HeaderLink href="/">About</HeaderLink>
@@ -87,9 +87,13 @@ import HeaderLink from './HeaderLink.astro';
 		align-items: center;
 		justify-content: space-between;
 		height: 3rem;
+		font-family: var(--font-display);
+		font-size: 16.5px;
 	}
 	.site-title {
-		font-family: 'Noto Serif TC', serif;
+		font-size: 22px;
+		text-transform: uppercase;
+		line-height: 1;
 		font-weight: 400;
 		text-decoration: none;
 		color: var(--fg);
@@ -119,8 +123,7 @@ import HeaderLink from './HeaderLink.astro';
 		border: none;
 		color: var(--fg);
 		cursor: pointer;
-		font-family: var(--font-mono);
-		font-size: 1rem;
+		font: inherit;
 		line-height: 1;
 		padding: 0;
 	}

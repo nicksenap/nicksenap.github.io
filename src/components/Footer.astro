@@ -77,6 +77,8 @@ const status = [
 		display: flex;
 		gap: 1.5ch;
 		flex-shrink: 0;
+		font-family: var(--font-display);
+		font-size: 16.5px;
 	}
 	.footer-links a,
 	.footer-links .fx {
@@ -87,6 +89,7 @@ const status = [
 	}
 	.footer-links .fx {
 		all: unset;
+		font: inherit;
 		cursor: pointer;
 		color: var(--fg);
 		opacity: 0.5;
@@ -102,6 +105,9 @@ const status = [
 	@media (max-width: 768px) {
 		footer {
 			font-size: 0.75rem;
+		}
+		.footer-links {
+			font-size: 11px;
 		}
 		.status .seg:nth-child(n + 4) {
 			display: none;

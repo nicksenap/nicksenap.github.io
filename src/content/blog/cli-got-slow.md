@@ -1,5 +1,5 @@
 ---
-title: "My CLI got slow, so I fixed it"
+title: "Fixing slow CLI"
 description: "Spawning 400 git subprocesses made my CLI crawl. Deduping, threading, and caching brought it from 10 seconds to 200 milliseconds."
 pubDate: 2026-03-09
 tags: ["python", "performance", "cli"]

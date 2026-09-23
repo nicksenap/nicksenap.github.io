@@ -1,5 +1,5 @@
 ---
-title: "A wall of AI slop, and the shim underneath it"
+title: "A wall of AI slop"
 description: "I ported a Python agent to TypeScript in a week. Then Amazon's eval product refused to score it, support sent two thousand words of nothing, and the real answer turned out to be sitting in an open-source file the whole time."
 pubDate: 2026-07-10
 tags: ["aws", "observability", "otel", "typescript", "ai"]

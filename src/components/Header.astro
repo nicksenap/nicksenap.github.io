@@ -8,74 +8,15 @@ import HeaderLink from './HeaderLink.astro';
 <header>
 	<nav>
 		<a href="/" class="site-title">out of context</a>
-		<div class="nav-right">
-			<div class="nav-links">
-				<HeaderLink href="/">About</HeaderLink>
-				<span class="sep">/</span>
-				<HeaderLink href="/thoughts">Thoughts</HeaderLink>
-				<span class="sep">/</span>
-				<HeaderLink href="/works">Works</HeaderLink>
-			</div>
-			<button class="action-btn" id="theme-toggle" tabindex="0" role="button">
-				<span class="hotkey">&#x2303;+T</span>
-				<span class="label" id="theme-label">Auto</span>
-			</button>
+		<div class="nav-links">
+			<HeaderLink href="/">About</HeaderLink>
+			<span class="sep">/</span>
+			<HeaderLink href="/thoughts">Thoughts</HeaderLink>
+			<span class="sep">/</span>
+			<HeaderLink href="/works">Works</HeaderLink>
 		</div>
 	</nav>
 </header>
-
-<script>
-	function initTheme() {
-		const toggle = document.getElementById('theme-toggle');
-		const label = document.getElementById('theme-label');
-		const root = document.documentElement;
-
-		if (localStorage.getItem('fx') === 'off') root.classList.add('no-fx');
-
-		// Three modes: dark → light → auto (follows the device). Label shows the current mode.
-		const modes = ['dark', 'light', 'auto'] as const;
-		type Mode = (typeof modes)[number];
-		const system = matchMedia('(prefers-color-scheme: light)');
-		let mode: Mode = (localStorage.getItem('theme') as Mode) || 'auto';
-		if (!modes.includes(mode)) mode = 'auto';
-
-		function setGiscusTheme(theme: string) {
-			const iframe = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
-			iframe?.contentWindow?.postMessage(
-				{ giscus: { setConfig: { theme } } },
-				'https://giscus.app',
-			);
-		}
-
-		function apply() {
-			const isLight = mode === 'light' || (mode === 'auto' && system.matches);
-			root.classList.toggle('theme-light', isLight);
-			if (label) label.textContent = mode[0].toUpperCase() + mode.slice(1);
-			const base = window.location.origin;
-			setGiscusTheme(isLight ? `${base}/giscus-terminal-light.css` : `${base}/giscus-terminal.css`);
-		}
-
-		function toggleTheme() {
-			mode = modes[(modes.indexOf(mode) + 1) % modes.length];
-			localStorage.setItem('theme', mode);
-			apply();
-		}
-
-		apply();
-		system.addEventListener('change', () => mode === 'auto' && apply());
-
-		toggle?.addEventListener('click', toggleTheme);
-
-		document.addEventListener('keydown', (e) => {
-			if (e.ctrlKey && e.key === 't') {
-				e.preventDefault();
-				toggleTheme();
-			}
-		});
-	}
-	initTheme();
-	document.addEventListener('astro:after-swap', initTheme);
-</script>
 
 <style>
 	header {
@@ -101,11 +42,6 @@ import HeaderLink from './HeaderLink.astro';
 	.site-title:hover {
 		text-decoration: none;
 	}
-	.nav-right {
-		display: flex;
-		align-items: center;
-		gap: 1.5ch;
-	}
 	.nav-links {
 		display: flex;
 		align-items: center;
@@ -114,31 +50,6 @@ import HeaderLink from './HeaderLink.astro';
 	.sep {
 		color: var(--border);
 		user-select: none;
-	}
-	.action-btn {
-		display: flex;
-		align-items: center;
-		gap: 0;
-		background: none;
-		border: none;
-		color: var(--fg);
-		cursor: pointer;
-		font: inherit;
-		line-height: 1;
-		padding: 0;
-	}
-	.hotkey {
-		padding: 4px 6px;
-		background: var(--action-hotkey-bg);
-	}
-	.label {
-		padding: 4px 8px;
-		background: var(--action-content-bg);
-		text-transform: uppercase;
-	}
-	.action-btn:hover .label {
-		background: var(--accent);
-		color: var(--bg);
 	}
 	@media (max-width: 520px) {
 		nav {
@@ -149,9 +60,6 @@ import HeaderLink from './HeaderLink.astro';
 		}
 		.site-title {
 			width: 100%;
-		}
-		.hotkey {
-			display: none;
 		}
 	}
 </style>

@@ -1,30 +1,70 @@
----
-// Mirrors pi's status line: model › thinking › cwd › branch. The model segment links to the harness page.
-const status = [
-	{ text: 'Fable 5.1', href: '/harness', title: 'the harness, taken apart' },
-	{ text: 'think:high' },
-	{ text: '~/blog' },
-	{ text: 'master' },
-];
----
-
 <footer>
-	<span class="status" aria-label="status line">
-		<span class="glyph">⬡</span>
-		{status.map((s, i) => (
-			<span class="seg">
-				{i > 0 && <span class="sep">〉</span>}
-				{s.href ? <a href={s.href} title={s.title}>{s.text}</a> : s.text}
-			</span>
-		))}
-	</span>
-	<div class="footer-links">
+	<div class="controls">
+		<button class="action-btn" id="theme-toggle" type="button" title="cycle theme">
+			<span class="hotkey">&#x2303;+T</span>
+			<span class="label" id="theme-label">Auto</span>
+		</button>
 		<button class="fx" id="fx-toggle" type="button" aria-pressed="true" title="toggle background effects">FX</button>
+	</div>
+	<div class="footer-links">
 		<a href="/rss.xml">RSS</a>
 		<a href="https://github.com/nicksenap" target="_blank">GITHUB</a>
 		<a href="https://www.linkedin.com/in/nick-zixian-song" target="_blank">LINKEDIN</a>
 	</div>
 </footer>
+
+<script>
+	function initTheme() {
+		const toggle = document.getElementById('theme-toggle');
+		const label = document.getElementById('theme-label');
+		const root = document.documentElement;
+
+		if (localStorage.getItem('fx') === 'off') root.classList.add('no-fx');
+
+		// Three modes: dark → light → auto (follows the device). Label shows the current mode.
+		const modes = ['dark', 'light', 'auto'] as const;
+		type Mode = (typeof modes)[number];
+		const system = matchMedia('(prefers-color-scheme: light)');
+		let mode: Mode = (localStorage.getItem('theme') as Mode) || 'auto';
+		if (!modes.includes(mode)) mode = 'auto';
+
+		function setGiscusTheme(theme: string) {
+			const iframe = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
+			iframe?.contentWindow?.postMessage(
+				{ giscus: { setConfig: { theme } } },
+				'https://giscus.app',
+			);
+		}
+
+		function apply() {
+			const isLight = mode === 'light' || (mode === 'auto' && system.matches);
+			root.classList.toggle('theme-light', isLight);
+			if (label) label.textContent = mode[0].toUpperCase() + mode.slice(1);
+			const base = window.location.origin;
+			setGiscusTheme(isLight ? `${base}/giscus-terminal-light.css` : `${base}/giscus-terminal.css`);
+		}
+
+		function toggleTheme() {
+			mode = modes[(modes.indexOf(mode) + 1) % modes.length];
+			localStorage.setItem('theme', mode);
+			apply();
+		}
+
+		apply();
+		system.addEventListener('change', () => mode === 'auto' && apply());
+
+		toggle?.addEventListener('click', toggleTheme);
+
+		document.addEventListener('keydown', (e) => {
+			if (e.ctrlKey && e.key === 't') {
+				e.preventDefault();
+				toggleTheme();
+			}
+		});
+	}
+	initTheme();
+	document.addEventListener('astro:after-swap', initTheme);
+</script>
 
 <script>
 	const btn = document.getElementById('fx-toggle');
@@ -48,30 +88,50 @@ const status = [
 		align-items: center;
 		gap: 2ch;
 	}
-	.status {
+	.controls {
 		display: flex;
 		align-items: center;
-		gap: 0.75ch;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
+		gap: 1.5ch;
+		font-family: var(--font-display);
+		font-size: 16.5px;
 	}
-	.status .glyph {
+	.action-btn {
+		display: flex;
+		align-items: center;
+		background: none;
+		border: none;
+		color: var(--fg);
+		cursor: pointer;
+		font: inherit;
+		line-height: 1;
+		padding: 0;
+	}
+	.hotkey {
+		padding: 4px 6px;
+		background: var(--action-hotkey-bg);
+	}
+	.label {
+		padding: 4px 8px;
+		background: var(--action-content-bg);
+		text-transform: uppercase;
+	}
+	.action-btn:hover .label {
+		background: var(--accent);
+		color: var(--bg);
+	}
+	.fx {
+		all: unset;
+		font: inherit;
+		cursor: pointer;
+		color: var(--fg);
 		opacity: 0.5;
+		transition: opacity 0.15s;
 	}
-	.status .seg {
-		display: inline-flex;
-		gap: 0.75ch;
+	.fx:hover {
+		opacity: 1;
 	}
-	.status .sep {
-		opacity: 0.35;
-	}
-	.status a {
-		text-decoration: none;
-		text-decoration-color: var(--border);
-	}
-	.status a:hover {
-		text-decoration: underline;
+	.fx[aria-pressed='false'] {
+		text-decoration: line-through;
 	}
 	.footer-links {
 		display: flex;
@@ -80,36 +140,24 @@ const status = [
 		font-family: var(--font-display);
 		font-size: 16.5px;
 	}
-	.footer-links a,
-	.footer-links .fx {
+	.footer-links a {
 		color: var(--fg);
 		text-decoration: none;
 		opacity: 0.5;
 		transition: opacity 0.15s;
 	}
-	.footer-links .fx {
-		all: unset;
-		font: inherit;
-		cursor: pointer;
-		color: var(--fg);
-		opacity: 0.5;
-		transition: opacity 0.15s;
-	}
-	.footer-links a:hover,
-	.footer-links .fx:hover {
+	.footer-links a:hover {
 		opacity: 1;
-	}
-	.footer-links .fx[aria-pressed='false'] {
-		text-decoration: line-through;
 	}
 	@media (max-width: 768px) {
 		footer {
 			font-size: 0.75rem;
 		}
+		.controls,
 		.footer-links {
 			font-size: 11px;
 		}
-		.status .seg:nth-child(n + 4) {
+		.hotkey {
 			display: none;
 		}
 	}

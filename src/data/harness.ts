@@ -42,14 +42,14 @@ export const HARNESS_PARTS: HarnessPart[] = [
 	},
 	{
 		id: 'workers',
-		name: 'sol 5.6 · med / grok 4.6',
+		name: 'opus 5.5 · med',
 		part: 'RAM',
 		role: 'workers',
 		blurb: 'One per slice, several at once, briefed and then checked by the oracle; medium effort is plenty once the task is specified.',
 	},
 	{
 		id: 'scout',
-		name: 'luna · low',
+		name: 'gpt 6 luna · low',
 		part: 'wireless',
 		role: 'scout',
 		blurb: 'Sent out first to read, grep, fetch and summarise; cheap enough to send often, low effort because it only reports back.',

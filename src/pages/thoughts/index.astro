@@ -48,7 +48,7 @@ const posts = (await getCollection('blog')).sort(
 	}
 	li a {
 		display: flex;
-		align-items: baseline;
+		align-items: last baseline; /* leader + date sit on the title's last line */
 		gap: 0.5ch;
 		padding: 0.35rem 0;
 		color: var(--fg);
@@ -60,7 +60,7 @@ const posts = (await getCollection('blog')).sort(
 		opacity: 1;
 	}
 	.title {
-		white-space: nowrap;
+		min-width: 0;
 	}
 	.dots {
 		flex: 1;
@@ -70,6 +70,7 @@ const posts = (await getCollection('blog')).sort(
 		top: -0.25em;
 	}
 	.date {
+		flex-shrink: 0;
 		white-space: nowrap;
 		font-variant-numeric: tabular-nums;
 	}

@@ -68,7 +68,7 @@ const { tag, posts } = Astro.props;
 	}
 	li a {
 		display: flex;
-		align-items: baseline;
+		align-items: last baseline; /* leader + date sit on the title's last line */
 		gap: 0.5ch;
 		padding: 0.35rem 0;
 		color: var(--fg);
@@ -80,7 +80,7 @@ const { tag, posts } = Astro.props;
 		opacity: 1;
 	}
 	.title {
-		white-space: nowrap;
+		min-width: 0;
 	}
 	.dots {
 		flex: 1;
@@ -90,6 +90,7 @@ const { tag, posts } = Astro.props;
 		top: -0.25em;
 	}
 	.date {
+		flex-shrink: 0;
 		white-space: nowrap;
 		font-variant-numeric: tabular-nums;
 	}

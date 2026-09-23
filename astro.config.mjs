@@ -11,6 +11,8 @@ const terminalLight = JSON.parse(readFileSync('./src/styles/shiki-terminal-light
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://nicksenap.github.io',
+	// Astro 7 defaults to 'jsx', which drops the newline-space before inline tags ("about<a>").
+	compressHTML: true,
 	integrations: [mdx(), sitemap()],
 	markdown: {
 		shikiConfig: {

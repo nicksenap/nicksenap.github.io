@@ -122,9 +122,11 @@ strong, b {
 
 code {
 	font-family: var(--font-mono);
-	font-size: 1em;
-	padding: 0.1em 0.3em;
+	font-size: 0.9em;
+	padding: 0.05em 0.3em;
 	background: var(--code-bg);
+	/* body line-height is 1.25, which makes a padded chip taller than the words around it */
+	line-height: 1;
 }
 
 pre {
@@ -186,6 +188,7 @@ table {
 	width: 100%;
 	border-collapse: collapse;
 	font-size: 1rem;
+	margin: 0 0 1.5rem;
 }
 
 th, td {

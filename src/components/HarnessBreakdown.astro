@@ -115,7 +115,7 @@
 				},
 			},
 			{
-				id: 'herdr',
+				id: 'rex',
 				pos: { x: 0, y: 0, z: 0 },
 				lift: 0,
 				build(a, c) {
@@ -277,7 +277,7 @@
 
 		// Build: components first (register footprints), then the board reads them.
 		const parts: Part[] = [];
-		const order = [...defs.filter((d) => d.id !== 'herdr'), defs.find((d) => d.id === 'herdr')!];
+		const order = [...defs.filter((d) => d.id !== 'rex'), defs.find((d) => d.id === 'rex')!];
 		for (const d of order) {
 			const anchor = new Zdog.Anchor({ addTo: illo, translate: { ...d.pos } });
 			d.build(anchor, c);

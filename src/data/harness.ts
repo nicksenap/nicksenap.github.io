@@ -18,12 +18,12 @@ export const HARNESS_PARTS: HarnessPart[] = [
 		url: 'https://ghostty.org',
 	},
 	{
-		id: 'herdr',
-		name: 'herdr',
+		id: 'rex',
+		name: 'rex',
 		part: 'PCB',
-		role: 'agent multiplexer',
-		blurb: 'A multiplexer for agents rather than shells: a pane per agent, a workspace per task, and everything below mounts here.',
-		url: 'https://github.com/herdrdev/herdr',
+		role: 'multiplexer',
+		blurb: 'Sessions, tabs and splits that outlive the terminal and take scripted input, so agents get a tab each and everything below mounts here.',
+		url: 'https://www.superlogical.com/rex/',
 	},
 	{
 		id: 'pi',

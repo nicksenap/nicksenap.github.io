@@ -99,7 +99,8 @@
 				},
 			},
 			{
-				id: 'ghostty',
+				id: 'base',
+				label: false,
 				pos: { x: 0, y: 26, z: 0 },
 				lift: 90,
 				build(a, c) {
@@ -109,9 +110,6 @@
 					new Zdog.Rect({ addTo: a, width: w, height: d, rotate: { x: TAU / 4 }, translate: { y: -14 }, ...wire(c.dim) });
 					for (const [x, z] of corners(w / 2, d / 2)) new Zdog.Shape({ addTo: a, path: [{ x, y: -14, z }, { x, y: 8, z }], ...wire(c.dim) });
 					for (const [x, z] of holes()) new Zdog.Cylinder({ addTo: a, diameter: 6, length: 8, translate: { x, y: -6, z }, rotate: { x: TAU / 4 }, ...wire(c.dim) });
-					// ghost eyes on the front wall
-					new Zdog.Shape({ addTo: a, translate: { x: -8, y: -4, z: d / 2 + 0.5 }, stroke: 4, color: c.dim });
-					new Zdog.Shape({ addTo: a, translate: { x: 8, y: -4, z: d / 2 + 0.5 }, stroke: 4, color: c.dim });
 				},
 			},
 			{

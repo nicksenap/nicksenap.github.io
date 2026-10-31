@@ -10,19 +10,11 @@ export type HarnessPart = {
 // Bottom → top, in explode order.
 export const HARNESS_PARTS: HarnessPart[] = [
 	{
-		id: 'ghostty',
-		name: 'ghostty',
-		part: 'case',
-		role: 'terminal',
-		blurb: 'GPU-rendered, native splits, one config file; it keeps up with agent output and otherwise stays out of the way.',
-		url: 'https://ghostty.org',
-	},
-	{
 		id: 'rex',
 		name: 'rex',
 		part: 'PCB',
-		role: 'multiplexer',
-		blurb: 'Sessions, tabs and splits that outlive the terminal and take scripted input, so agents get a tab each and everything below mounts here.',
+		role: 'terminal · multiplexer',
+		blurb: 'Terminal and multiplexer in one: sessions that outlive the window, a tab per agent, scriptable input, and everything below mounts here.',
 		url: 'https://www.superlogical.com/rex/',
 	},
 	{
